@@ -1,11 +1,23 @@
 import type {
   CategoryId,
+  ChordProgression,
   Exercise,
   Intensity,
+  MusicalKey,
+  SessionContext,
   SessionPlan,
   SessionPlanItem,
 } from './types';
 import { INTENSITIES } from './categories';
+import { formatKey, numberLabel } from './music';
+
+/** Concepts we favour when a session is built around a progression. */
+const PROGRESSION_CONCEPTS = new Set([
+  'number-system',
+  'progressions',
+  'playing-changes',
+  'passing-tones',
+]);
 
 let idCounter = 0;
 function uid(prefix: string): string {
@@ -38,6 +50,31 @@ export interface GenerateOptions {
   totalMinutes: number;
   focus?: CategoryId[];
   intensity?: Intensity;
+  /** Bias exercise selection toward this progression / number-system work. */
+  preferProgressionId?: string;
+  /** Informational musical context carried onto the plan. */
+  context?: SessionContext;
+}
+
+/**
+ * Order a category's exercises so that, when a progression is being practiced,
+ * exercises tied to that progression (or to progression concepts) come first.
+ * Randomised within each tier to keep sessions varied.
+ */
+function rankPool(
+  pool: Exercise[],
+  preferProgressionId?: string,
+): Exercise[] {
+  if (!preferProgressionId) return shuffle(pool);
+  const preferred: Exercise[] = [];
+  const rest: Exercise[] = [];
+  for (const e of pool) {
+    const matches =
+      e.progressionId === preferProgressionId ||
+      (e.concepts?.some((c) => PROGRESSION_CONCEPTS.has(c)) ?? false);
+    (matches ? preferred : rest).push(e);
+  }
+  return [...shuffle(preferred), ...shuffle(rest)];
 }
 
 function applyTempo(exercise: Exercise, intensity: Intensity): Exercise {
@@ -82,7 +119,10 @@ export function generateSession(
     if (!pools.has(category)) {
       pools.set(
         category,
-        shuffle(pool.filter((e) => e.category === category)),
+        rankPool(
+          pool.filter((e) => e.category === category),
+          options.preferProgressionId,
+        ),
       );
     }
     const categoryPool = pools.get(category)!;
@@ -134,7 +174,50 @@ export function generateSession(
     intensity,
     focus,
     items,
+    context: options.context,
   };
+}
+
+export interface ProgressionSessionOptions {
+  progression: ChordProgression;
+  key: MusicalKey;
+  focus?: CategoryId[];
+  totalMinutes?: number;
+  intensity?: Intensity;
+  style?: string;
+}
+
+/**
+ * Build a session around a specific progression in a specific key, reusing the
+ * standard session infrastructure. Attaches the progression as session context
+ * and biases exercise selection toward number-system / changes work.
+ */
+export function generateProgressionSession(
+  pool: Exercise[],
+  {
+    progression,
+    key,
+    focus,
+    totalMinutes = 30,
+    intensity = 'normal',
+    style,
+  }: ProgressionSessionOptions,
+): SessionPlan {
+  const numbers = progression.chords.map(numberLabel).join(' → ');
+  const context: SessionContext = {
+    label: `${numbers} · ${formatKey(key)}`,
+    progressionId: progression.id,
+    key: formatKey(key),
+    style: style ?? progression.style,
+  };
+
+  return generateSession(pool, {
+    totalMinutes,
+    intensity,
+    focus: focus ?? ['loop-practice', 'theory'],
+    preferProgressionId: progression.id,
+    context,
+  });
 }
 
 /** The recommended daily session shown on the Home dashboard. */

@@ -6,6 +6,7 @@ import { Home } from '@/pages/Home';
 import { Practice } from '@/pages/Practice';
 import { Library } from '@/pages/Library';
 import { SongDetail } from '@/pages/SongDetail';
+import { LoopDetail } from '@/pages/LoopDetail';
 import { Progress } from '@/pages/Progress';
 import { NotFound } from '@/pages/NotFound';
 
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/practice" element={<Practice />} />
           <Route path="/library" element={<Library />} />
           <Route path="/library/song/:songId" element={<SongDetail />} />
+          <Route path="/library/loop/:loopId" element={<LoopDetail />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

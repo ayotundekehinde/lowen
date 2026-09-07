@@ -260,6 +260,20 @@ export interface SessionPlanItem {
   status: PlanItemStatus;
 }
 
+/**
+ * Optional musical context attached to a session, e.g. when a session is
+ * launched from a progression or loop via "Practice This". Purely informational
+ * — it lets the preview and runner show what the session is built around.
+ */
+export interface SessionContext {
+  /** e.g. "1 → 5 → 6 → 4 · D Major". */
+  label: string;
+  progressionId?: string;
+  /** Display key, e.g. "D Major". */
+  key?: string;
+  style?: string;
+}
+
 export interface SessionPlan {
   id: string;
   createdAt: string;
@@ -267,4 +281,5 @@ export interface SessionPlan {
   intensity: Intensity;
   focus: CategoryId[];
   items: SessionPlanItem[];
+  context?: SessionContext;
 }

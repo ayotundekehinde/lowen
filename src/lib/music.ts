@@ -35,6 +35,25 @@ export const SHARP_NOTES: PitchClass[] = [
   'B',
 ];
 
+/**
+ * A practical, chromatic list of tonics for key pickers (index 0 = C). Uses
+ * readable flat spellings for the black keys, which suit most gospel keys.
+ */
+export const KEY_CHOICES: PitchClass[] = [
+  'C',
+  'Db',
+  'D',
+  'Eb',
+  'E',
+  'F',
+  'Gb',
+  'G',
+  'Ab',
+  'A',
+  'Bb',
+  'B',
+];
+
 /** The twelve pitch classes spelled with flats. */
 export const FLAT_NOTES: PitchClass[] = [
   'C',

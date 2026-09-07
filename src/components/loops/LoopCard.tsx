@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { WaveBars } from './WaveBars';
 import { ProgressionView } from '@/components/music/ProgressionView';
 import { Button } from '@/components/ui/Button';
@@ -29,9 +30,12 @@ export function LoopCard({ loop, onPractice, onChallenge }: LoopCardProps) {
     <div className="panel panel-hover flex flex-col p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate font-display text-lg font-semibold text-ink">
+          <Link
+            to={`/library/loop/${loop.id}`}
+            className="focus-ring block truncate font-display text-lg font-semibold text-ink transition-colors hover:text-accent"
+          >
             {loop.name}
-          </h3>
+          </Link>
           <p className="mt-0.5 truncate text-sm text-ink-muted">
             {loop.style ?? loop.genre}
             {loop.feel ? ` · ${loop.feel}` : ''}

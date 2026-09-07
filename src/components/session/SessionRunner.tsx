@@ -92,6 +92,12 @@ export function SessionRunner({ plan, onExit }: SessionRunnerProps) {
           <p className="mt-1 text-sm text-ink-muted">
             {formatMinutes(plan.totalMinutes)} · {plan.items.length} exercises
           </p>
+          {plan.context && (
+            <p className="tnum mt-1 text-sm font-medium text-accent">
+              {plan.context.label}
+              {plan.context.style ? ` · ${plan.context.style}` : ''}
+            </p>
+          )}
         </div>
         <Button variant="outline" size="sm" onClick={onExit} icon={<X size={15} />}>
           End

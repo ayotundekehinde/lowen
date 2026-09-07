@@ -7,9 +7,12 @@ import { DifficultyBadge } from '@/components/ui/Badge';
 import { LoopCard } from '@/components/loops/LoopCard';
 import { ChallengeOverlay } from '@/components/loops/ChallengeOverlay';
 import { ProgressionCard } from '@/components/music/ProgressionView';
-import { generateSession } from '@/lib/sessionGenerator';
+import {
+  generateSession,
+  generateProgressionSession,
+} from '@/lib/sessionGenerator';
 import { parseKey } from '@/lib/music';
-import type { Loop } from '@/lib/types';
+import type { Loop, MusicalKey } from '@/lib/types';
 import { usePractice } from '@/store/practiceStore';
 import {
   ArrowLeft,
@@ -224,6 +227,18 @@ export function SongDetail() {
                 key={prog.id}
                 progression={prog}
                 musicKey={song.keyRoot ?? parseKey(song.key)}
+                keySelector
+                onPractice={(key: MusicalKey) => {
+                  setActivePlan(
+                    generateProgressionSession(exercises, {
+                      progression: prog,
+                      key,
+                      focus: ['repertoire', 'theory'],
+                      style: song.genre,
+                    }),
+                  );
+                  navigate('/practice');
+                }}
               />
             ))}
           </div>

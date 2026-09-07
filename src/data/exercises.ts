@@ -298,6 +298,54 @@ export const exercises: Exercise[] = [
     feel: 'swing',
     tags: ['turnaround', 'changes'],
   },
+
+  // ── Number-system drills ────────────────────────────────────
+  {
+    id: 'ex-numbers-1564-keys',
+    name: 'Roots of 1 5 6 4 in three keys',
+    category: 'theory',
+    durationMin: 10,
+    instructions:
+      'Play the roots of 1 → 5 → 6 → 4 in D, then move it to G, then to Bb — thinking in numbers, not note names, the whole time.',
+    difficulty: 'beginner',
+    concepts: ['number-system', 'transposition', 'progressions'],
+    progressionId: 'prog-1564',
+    tags: ['numbers', 'roots', 'transposition'],
+  },
+  {
+    id: 'ex-numbers-1451-roots-fifths',
+    name: '1 4 5 1 with roots and fifths',
+    category: 'theory',
+    durationMin: 8,
+    instructions:
+      'Play 1 → 4 → 5 → 1 using only the root and the 5th of each chord. Keep the 5ths above the root, then try dropping them below.',
+    difficulty: 'beginner',
+    concepts: ['number-system', 'progressions'],
+    tags: ['numbers', 'root-fifth'],
+  },
+  {
+    id: 'ex-numbers-6251',
+    name: 'Number chart: 6 2 5 1',
+    category: 'theory',
+    durationMin: 10,
+    instructions:
+      'Walk the roots of a 6 → 2 → 5 → 1 turnaround. Say each number out loud on the downbeat so the shape sticks in any key.',
+    difficulty: 'intermediate',
+    concepts: ['number-system', 'progressions', 'playing-changes'],
+    progressionId: 'prog-6251',
+    tags: ['numbers', 'turnaround'],
+  },
+  {
+    id: 'ex-numbers-identify',
+    name: 'Identify the numbers by ear',
+    category: 'ear-training',
+    durationMin: 10,
+    instructions:
+      'Loop a progression and call out the number of each chord as it changes — 1, 6, 4, 5 — before you play a single note.',
+    difficulty: 'intermediate',
+    concepts: ['number-system', 'progressions'],
+    tags: ['numbers', 'listening'],
+  },
 ];
 
 export function getExercise(id: string): Exercise | undefined {
