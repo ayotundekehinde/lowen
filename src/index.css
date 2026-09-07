@@ -1,0 +1,187 @@
+@import 'tailwindcss';
+
+/*
+ * Lowen design system
+ * A dark, minimal, music-studio aesthetic. Warm amber accent evokes analog
+ * studio gear; the neutral palette is cool near-black to keep focus on content.
+ */
+
+@theme {
+  /* Typography */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Surfaces — layered near-black */
+  --color-base: #08080b;
+  --color-surface: #101014;
+  --color-panel: #16161c;
+  --color-elevated: #1c1c24;
+  --color-hover: #23232c;
+
+  /* Lines */
+  --color-line: #26262f;
+  --color-line-strong: #34343f;
+
+  /* Text */
+  --color-ink: #ededf0;
+  --color-ink-soft: #b6b6c0;
+  --color-ink-muted: #7c7c88;
+  --color-ink-faint: #55555f;
+
+  /* Brand accent — warm studio amber */
+  --color-accent: #eaa640;
+  --color-accent-soft: #f0bd6e;
+  --color-accent-deep: #b97d24;
+
+  /* Category / semantic hues (muted, non-neon) */
+  --color-technique: #e0894a;
+  --color-theory: #5fa8d3;
+  --color-repertoire: #b08ad9;
+  --color-creativity: #e0698f;
+  --color-ear: #5fc2a3;
+  --color-loop: #d7b357;
+
+  --color-good: #6bbf83;
+  --color-danger: #d9695f;
+
+  /* Radii */
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.4s ease both;
+  --animate-rise: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes wave {
+  from {
+    transform: scaleY(0.35);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 45%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 12px color-mix(in srgb, var(--color-accent) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 0%, transparent);
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    color-scheme: dark;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-base);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    /* subtle studio texture */
+    background-image: radial-gradient(
+        circle at 15% -10%,
+        color-mix(in srgb, var(--color-accent) 6%, transparent),
+        transparent 45%
+      ),
+      radial-gradient(
+        circle at 100% 0%,
+        color-mix(in srgb, #5fa8d3 5%, transparent),
+        transparent 40%
+      );
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 35%, transparent);
+    color: var(--color-ink);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-strong);
+    border-radius: 999px;
+    border: 2px solid var(--color-base);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-ink-faint);
+  }
+
+  input,
+  select,
+  button,
+  textarea {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .panel {
+    background-color: var(--color-panel);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-2xl);
+  }
+
+  .panel-hover {
+    transition: border-color 0.2s ease, background-color 0.2s ease,
+      transform 0.2s ease;
+  }
+  .panel-hover:hover {
+    border-color: var(--color-line-strong);
+    background-color: var(--color-elevated);
+  }
+
+  .tnum {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .focus-ring {
+    outline: none;
+  }
+  .focus-ring:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}

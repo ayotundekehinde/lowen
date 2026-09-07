@@ -1,0 +1,136 @@
+import type { Song } from '@/lib/types';
+
+export const songs: Song[] = [
+  {
+    id: 'song-1',
+    title: 'Dean Town',
+    artist: 'Vulfpeck',
+    genre: 'Funk',
+    key: 'D Minor',
+    bpm: 100,
+    tuning: 'Standard (EADG)',
+    difficulty: 'advanced',
+    progress: 62,
+    favorite: true,
+    notes:
+      'Relentless 16th-note line — the whole thing lives or dies on right-hand consistency and muting. Keep the wrist relaxed and let the fretting hand do the articulation.',
+    loopIds: ['loop-1'],
+    sections: [
+      { id: 'song-1-intro', name: 'Intro', progress: 90 },
+      { id: 'song-1-verse', name: 'Verse', progress: 70 },
+      { id: 'song-1-chorus', name: 'Chorus', progress: 45 },
+      { id: 'song-1-bridge', name: 'Bridge', progress: 35 },
+      { id: 'song-1-outro', name: 'Outro', progress: 60 },
+    ],
+  },
+  {
+    id: 'song-2',
+    title: 'Sir Duke',
+    artist: 'Stevie Wonder',
+    genre: 'Motown / Soul',
+    key: 'B Major',
+    bpm: 120,
+    tuning: 'Standard (EADG)',
+    difficulty: 'advanced',
+    progress: 40,
+    favorite: false,
+    notes:
+      'The unison horn/bass line is the crown jewel. Practise it hands-separate and in small chunks — accuracy first, tempo second.',
+    loopIds: ['loop-7'],
+    sections: [
+      { id: 'song-2-intro', name: 'Intro', progress: 55 },
+      { id: 'song-2-verse', name: 'Verse', progress: 50 },
+      { id: 'song-2-chorus', name: 'Chorus', progress: 30 },
+      { id: 'song-2-line', name: 'Unison Line', progress: 20 },
+      { id: 'song-2-outro', name: 'Outro', progress: 40 },
+    ],
+  },
+  {
+    id: 'song-3',
+    title: 'Come Down',
+    artist: 'Anderson .Paak',
+    genre: 'Funk / R&B',
+    key: 'E Minor',
+    bpm: 98,
+    tuning: 'Standard (EADG)',
+    difficulty: 'intermediate',
+    progress: 78,
+    favorite: true,
+    notes:
+      'All about the pocket. Sit slightly behind the beat and let the ghost notes breathe. Do not overplay the verse.',
+    loopIds: ['loop-1', 'loop-2'],
+    sections: [
+      { id: 'song-3-intro', name: 'Intro', progress: 95 },
+      { id: 'song-3-verse', name: 'Verse', progress: 85 },
+      { id: 'song-3-chorus', name: 'Chorus', progress: 70 },
+      { id: 'song-3-bridge', name: 'Bridge', progress: 60 },
+    ],
+  },
+  {
+    id: 'song-4',
+    title: 'Feel Good Inc.',
+    artist: 'Gorillaz',
+    genre: 'Alt / Hip-Hop',
+    key: 'D Minor',
+    bpm: 138,
+    tuning: 'Standard (EADG)',
+    difficulty: 'beginner',
+    progress: 88,
+    favorite: false,
+    notes:
+      'Deceptively simple riff — the challenge is the dynamics and keeping it hypnotic without dragging. Mute tightly.',
+    loopIds: [],
+    sections: [
+      { id: 'song-4-intro', name: 'Intro', progress: 100 },
+      { id: 'song-4-verse', name: 'Verse', progress: 95 },
+      { id: 'song-4-chorus', name: 'Chorus', progress: 80 },
+      { id: 'song-4-outro', name: 'Outro', progress: 75 },
+    ],
+  },
+  {
+    id: 'song-5',
+    title: 'Teen Town',
+    artist: 'Weather Report',
+    genre: 'Jazz Fusion',
+    key: 'C Major',
+    bpm: 148,
+    tuning: 'Standard (EADG)',
+    difficulty: 'advanced',
+    progress: 18,
+    favorite: false,
+    notes:
+      'The Everest. Loop 2-bar fragments at half tempo. This is a long-term project — track small wins.',
+    loopIds: ['loop-5'],
+    sections: [
+      { id: 'song-5-head', name: 'Head', progress: 25 },
+      { id: 'song-5-a', name: 'A Section', progress: 20 },
+      { id: 'song-5-b', name: 'B Section', progress: 12 },
+      { id: 'song-5-solo', name: 'Solo', progress: 5 },
+    ],
+  },
+  {
+    id: 'song-6',
+    title: 'Another One Bites the Dust',
+    artist: 'Queen',
+    genre: 'Rock',
+    key: 'E Minor',
+    bpm: 110,
+    tuning: 'Standard (EADG)',
+    difficulty: 'beginner',
+    progress: 96,
+    favorite: true,
+    notes:
+      'The most iconic bass riff going. Nail the rests and keep it dead in time — the groove is all in the space.',
+    loopIds: [],
+    sections: [
+      { id: 'song-6-intro', name: 'Intro', progress: 100 },
+      { id: 'song-6-verse', name: 'Verse', progress: 100 },
+      { id: 'song-6-chorus', name: 'Chorus', progress: 90 },
+      { id: 'song-6-break', name: 'Breakdown', progress: 90 },
+    ],
+  },
+];
+
+export function getSong(id: string): Song | undefined {
+  return songs.find((s) => s.id === id);
+}
