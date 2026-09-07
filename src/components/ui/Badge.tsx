@@ -1,0 +1,78 @@
+import { cn } from '@/lib/cn';
+import { pillarColor, PILLARS } from '@/lib/pillars';
+import type { PillarId, Difficulty } from '@/lib/types';
+
+export function PillarBadge({
+  pillar,
+  className,
+  withDot = true,
+}: {
+  pillar: PillarId;
+  className?: string;
+  withDot?: boolean;
+}) {
+  const color = pillarColor(pillar);
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide',
+        className,
+      )}
+      style={{
+        color,
+        backgroundColor: `color-mix(in srgb, ${color} 14%, transparent)`,
+      }}
+    >
+      {withDot && (
+        <span
+          className="h-1.5 w-1.5 rounded-full"
+          style={{ backgroundColor: color }}
+        />
+      )}
+      {PILLARS[pillar].label}
+    </span>
+  );
+}
+
+export function PillarDot({ pillar }: { pillar: PillarId }) {
+  return (
+    <span
+      className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+      style={{ backgroundColor: pillarColor(pillar) }}
+    />
+  );
+}
+
+const difficultyStyles: Record<Difficulty, string> = {
+  beginner: 'text-good bg-good/12',
+  intermediate: 'text-accent bg-accent/12',
+  advanced: 'text-danger bg-danger/12',
+};
+
+export function DifficultyBadge({
+  difficulty,
+  className,
+}: {
+  difficulty: Difficulty;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium capitalize',
+        difficultyStyles[difficulty],
+        className,
+      )}
+    >
+      {difficulty}
+    </span>
+  );
+}
+
+export function Tag({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center rounded-md border border-line bg-surface px-2 py-0.5 text-[11px] text-ink-muted">
+      {children}
+    </span>
+  );
+}

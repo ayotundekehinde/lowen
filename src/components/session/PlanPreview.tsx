@@ -1,0 +1,101 @@
+import { Button } from '@/components/ui/Button';
+import { PillarBadge } from '@/components/ui/Badge';
+import { pillarColor, SESSION_MODES } from '@/lib/pillars';
+import { formatMinutes } from '@/lib/format';
+import type { SessionPlan } from '@/lib/types';
+import { Gauge, ListMusic, Play, RefreshCw } from 'lucide-react';
+
+interface PlanPreviewProps {
+  plan: SessionPlan;
+  onStart: () => void;
+  onRegenerate: () => void;
+}
+
+export function PlanPreview({ plan, onStart, onRegenerate }: PlanPreviewProps) {
+  return (
+    <div className="animate-[var(--animate-rise)]">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+            Your session
+          </p>
+          <h2 className="mt-1 font-display text-2xl font-semibold text-ink">
+            {formatMinutes(plan.totalMinutes)} · {plan.items.length} exercises
+          </h2>
+          <p className="mt-1 text-sm text-ink-muted">
+            {SESSION_MODES[plan.mode].label}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={onRegenerate} icon={<RefreshCw size={15} />}>
+            Regenerate
+          </Button>
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={onStart}
+            icon={<Play size={18} />}
+            className="min-w-40"
+          >
+            Start session
+          </Button>
+        </div>
+      </div>
+
+      {plan.context && (
+        <div className="mb-4 flex items-center gap-3 rounded-xl border border-accent/25 bg-accent/10 px-4 py-3">
+          <ListMusic size={18} className="shrink-0 text-accent" />
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-accent">
+              Working on
+            </p>
+            <p className="tnum truncate text-sm font-medium text-ink">
+              {plan.context.label}
+              {plan.context.style ? ` · ${plan.context.style}` : ''}
+            </p>
+          </div>
+        </div>
+      )}
+
+      <ol className="space-y-3">
+        {plan.items.map((item, i) => {
+          const color = pillarColor(item.exercise.pillars[0]);
+          return (
+            <li key={item.id} className="panel panel-hover flex items-center gap-4 p-4">
+              <span
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl font-display text-sm font-semibold"
+                style={{
+                  color,
+                  backgroundColor: `color-mix(in srgb, ${color} 14%, transparent)`,
+                }}
+              >
+                {i + 1}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-medium text-ink">{item.exercise.name}</h3>
+                  <PillarBadge pillar={item.exercise.pillars[0]} />
+                </div>
+                <p className="mt-1 line-clamp-1 text-sm text-ink-muted">
+                  {item.exercise.instructions}
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                <div className="tnum font-display text-lg font-semibold text-ink">
+                  {item.durationMin}
+                  <span className="ml-0.5 text-xs font-normal text-ink-muted">min</span>
+                </div>
+                {item.exercise.bpm != null && (
+                  <div className="mt-0.5 flex items-center justify-end gap-1 text-xs text-ink-muted">
+                    <Gauge size={12} />
+                    <span className="tnum">{item.exercise.bpm}</span>
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
