@@ -6,6 +6,8 @@ import {
   type ReactNode,
 } from 'react';
 import type {
+  ChordProgression,
+  Exercise,
   Loop,
   PracticeSession,
   SessionPlan,
@@ -19,6 +21,8 @@ import {
   weeklyMinutesTotal,
 } from '@/lib/stats';
 import {
+  chordProgressions as seedProgressions,
+  exercises as seedExercises,
   loops as seedLoops,
   sessionHistory as seedSessions,
   skills as seedSkills,
@@ -36,6 +40,8 @@ import {
 interface PracticeStore {
   songs: Song[];
   loops: Loop[];
+  exercises: Exercise[];
+  progressions: ChordProgression[];
   skills: Skill[];
   sessions: PracticeSession[];
   stats: Stats;
@@ -50,6 +56,11 @@ interface PracticeStore {
   toggleSongFavorite: (songId: string) => void;
   toggleLoopFavorite: (loopId: string) => void;
   updateSongNotes: (songId: string, notes: string) => void;
+
+  /** Selectors that read the store's *mutable* copies (single source of truth). */
+  getSongById: (id: string) => Song | undefined;
+  getLoopById: (id: string) => Loop | undefined;
+  getProgressionById: (id: string) => ChordProgression | undefined;
 }
 
 const PracticeContext = createContext<PracticeStore | null>(null);
@@ -57,6 +68,8 @@ const PracticeContext = createContext<PracticeStore | null>(null);
 export function PracticeProvider({ children }: { children: ReactNode }) {
   const [songs, setSongs] = useState<Song[]>(seedSongs);
   const [loops, setLoops] = useState<Loop[]>(seedLoops);
+  const [exercises] = useState<Exercise[]>(seedExercises);
+  const [progressions] = useState<ChordProgression[]>(seedProgressions);
   const [skills] = useState<Skill[]>(seedSkills);
   const [sessions, setSessions] = useState<PracticeSession[]>(seedSessions);
   const [activePlan, setActivePlan] = useState<SessionPlan | null>(null);
@@ -72,6 +85,8 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
     () => ({
       songs,
       loops,
+      exercises,
+      progressions,
       skills,
       sessions,
       stats,
@@ -79,6 +94,9 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
       weekMinutes,
       activePlan,
       setActivePlan,
+      getSongById: (id) => songs.find((s) => s.id === id),
+      getLoopById: (id) => loops.find((l) => l.id === id),
+      getProgressionById: (id) => progressions.find((p) => p.id === id),
       recordSession: (session) =>
         setSessions((prev) => [session, ...prev]),
       toggleSongFavorite: (songId) =>
@@ -101,6 +119,8 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
     [
       songs,
       loops,
+      exercises,
+      progressions,
       skills,
       sessions,
       stats,

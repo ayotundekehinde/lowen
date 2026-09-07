@@ -6,14 +6,16 @@ import { ProgressBar, RadialProgress } from '@/components/ui/Progress';
 import { DifficultyBadge } from '@/components/ui/Badge';
 import { LoopCard } from '@/components/loops/LoopCard';
 import { ChallengeOverlay } from '@/components/loops/ChallengeOverlay';
-import { getLoop } from '@/data';
+import { ProgressionCard } from '@/components/music/ProgressionView';
 import { generateSession } from '@/lib/sessionGenerator';
+import { parseKey } from '@/lib/music';
 import type { Loop } from '@/lib/types';
 import { usePractice } from '@/store/practiceStore';
 import {
   ArrowLeft,
   Dumbbell,
   Heart,
+  ListMusic,
   Music4,
   Repeat,
   Save,
@@ -22,10 +24,17 @@ import {
 export function SongDetail() {
   const { songId } = useParams();
   const navigate = useNavigate();
-  const { songs, setActivePlan, toggleSongFavorite, updateSongNotes } =
-    usePractice();
+  const {
+    getSongById,
+    getLoopById,
+    getProgressionById,
+    exercises,
+    setActivePlan,
+    toggleSongFavorite,
+    updateSongNotes,
+  } = usePractice();
 
-  const song = songs.find((s) => s.id === songId);
+  const song = songId ? getSongById(songId) : undefined;
   const [notes, setNotes] = useState(song?.notes ?? '');
   const [notesDirty, setNotesDirty] = useState(false);
   const [challengeLoop, setChallengeLoop] = useState<Loop | null>(null);
@@ -42,19 +51,26 @@ export function SongDetail() {
   }
 
   const associatedLoops = song.loopIds
-    .map((id) => getLoop(id))
+    .map((id) => getLoopById(id))
     .filter((l): l is Loop => Boolean(l));
+
+  const associatedProgressions = (song.progressionIds ?? [])
+    .map((id) => getProgressionById(id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   const practiceSong = () => {
     setActivePlan(
-      generateSession({ totalMinutes: 30, focus: ['repertoire'] }),
+      generateSession(exercises, { totalMinutes: 30, focus: ['repertoire'] }),
     );
     navigate('/practice');
   };
 
   const practiceWithLoop = () => {
     setActivePlan(
-      generateSession({ totalMinutes: 30, focus: ['loop-practice'] }),
+      generateSession(exercises, {
+        totalMinutes: 30,
+        focus: ['loop-practice'],
+      }),
     );
     navigate('/practice');
   };
@@ -192,6 +208,27 @@ export function SongDetail() {
           className="focus-ring w-full resize-y rounded-xl border border-line bg-surface p-4 text-sm leading-relaxed text-ink-soft placeholder:text-ink-faint"
         />
       </section>
+
+      {/* Associated chord progressions */}
+      {associatedProgressions.length > 0 && (
+        <section>
+          <div className="mb-4 flex items-center gap-2">
+            <ListMusic size={18} className="text-accent" />
+            <h2 className="font-display text-lg font-semibold text-ink">
+              Chord progressions
+            </h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {associatedProgressions.map((prog) => (
+              <ProgressionCard
+                key={prog.id}
+                progression={prog}
+                musicKey={song.keyRoot ?? parseKey(song.key)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Associated loops */}
       <section>

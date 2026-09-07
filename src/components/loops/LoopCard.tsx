@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { WaveBars } from './WaveBars';
+import { ProgressionView } from '@/components/music/ProgressionView';
 import { Button } from '@/components/ui/Button';
 import { DifficultyBadge, Tag } from '@/components/ui/Badge';
 import { cn } from '@/lib/cn';
+import { parseKey } from '@/lib/music';
 import type { Loop } from '@/lib/types';
 import { usePractice } from '@/store/practiceStore';
 import { Dumbbell, Heart, Pause, Play, Shuffle } from 'lucide-react';
@@ -14,8 +16,14 @@ interface LoopCardProps {
 }
 
 export function LoopCard({ loop, onPractice, onChallenge }: LoopCardProps) {
-  const { toggleLoopFavorite } = usePractice();
+  const { toggleLoopFavorite, getProgressionById } = usePractice();
   const [playing, setPlaying] = useState(false);
+
+  const progression = loop.progressionId
+    ? getProgressionById(loop.progressionId)
+    : undefined;
+  const chords = progression?.chords ?? loop.numberProgression;
+  const musicKey = loop.keyRoot ?? parseKey(loop.key);
 
   return (
     <div className="panel panel-hover flex flex-col p-5">
@@ -24,7 +32,10 @@ export function LoopCard({ loop, onPractice, onChallenge }: LoopCardProps) {
           <h3 className="truncate font-display text-lg font-semibold text-ink">
             {loop.name}
           </h3>
-          <p className="mt-0.5 text-sm text-ink-muted">{loop.genre}</p>
+          <p className="mt-0.5 truncate text-sm text-ink-muted">
+            {loop.style ?? loop.genre}
+            {loop.feel ? ` · ${loop.feel}` : ''}
+          </p>
         </div>
         <button
           onClick={() => toggleLoopFavorite(loop.id)}
@@ -65,6 +76,16 @@ export function LoopCard({ loop, onPractice, onChallenge }: LoopCardProps) {
         <MetaItem label="Tempo" value={`${loop.bpm} BPM`} />
         <MetaItem label="Meter" value={loop.timeSignature} />
       </dl>
+
+      {/* Number-system progression */}
+      {chords && chords.length > 0 && (
+        <div className="mt-4">
+          <p className="mb-2 text-[11px] uppercase tracking-wider text-ink-faint">
+            Progression
+          </p>
+          <ProgressionView chords={chords} musicKey={musicKey} />
+        </div>
+      )}
 
       <div className="mt-4 flex flex-wrap items-center gap-1.5">
         <DifficultyBadge difficulty={loop.difficulty} />

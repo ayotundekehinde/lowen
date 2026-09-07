@@ -6,7 +6,6 @@ import type {
   SessionPlanItem,
 } from './types';
 import { INTENSITIES } from './categories';
-import { exercises } from '@/data/exercises';
 
 let idCounter = 0;
 function uid(prefix: string): string {
@@ -49,10 +48,15 @@ function applyTempo(exercise: Exercise, intensity: Intensity): Exercise {
 
 /**
  * Build a concrete practice plan from a duration, a set of focus categories and
- * an intensity. Exercises are drawn from the mock pool, one per focus slot, then
- * durations are distributed to fill the requested total.
+ * an intensity. Exercises are drawn from the supplied `pool` (injected by the
+ * caller, typically from the store) — this module has no dependency on the mock
+ * data layer. One exercise is picked per focus slot, then durations are
+ * distributed to fill the requested total.
  */
-export function generateSession(options: GenerateOptions): SessionPlan {
+export function generateSession(
+  pool: Exercise[],
+  options: GenerateOptions,
+): SessionPlan {
   const { totalMinutes } = options;
   const intensity: Intensity = options.intensity ?? 'normal';
   const focus =
@@ -78,11 +82,11 @@ export function generateSession(options: GenerateOptions): SessionPlan {
     if (!pools.has(category)) {
       pools.set(
         category,
-        shuffle(exercises.filter((e) => e.category === category)),
+        shuffle(pool.filter((e) => e.category === category)),
       );
     }
-    const pool = pools.get(category)!;
-    const next = pool.find((e) => !usedIds.has(e.id));
+    const categoryPool = pools.get(category)!;
+    const next = categoryPool.find((e) => !usedIds.has(e.id));
     if (next) {
       usedIds.add(next.id);
       picked.push(next);
@@ -95,7 +99,7 @@ export function generateSession(options: GenerateOptions): SessionPlan {
 
   // Fallback: if focus categories couldn't fill the target, top up from anything.
   if (picked.length < 2) {
-    for (const e of shuffle(exercises)) {
+    for (const e of shuffle(pool)) {
       if (picked.length >= targetCount) break;
       if (!usedIds.has(e.id)) {
         usedIds.add(e.id);
@@ -134,8 +138,8 @@ export function generateSession(options: GenerateOptions): SessionPlan {
 }
 
 /** The recommended daily session shown on the Home dashboard. */
-export function recommendedSession(): SessionPlan {
-  return generateSession({
+export function recommendedSession(pool: Exercise[]): SessionPlan {
+  return generateSession(pool, {
     totalMinutes: 50,
     focus: DEFAULT_FOCUS,
     intensity: 'normal',

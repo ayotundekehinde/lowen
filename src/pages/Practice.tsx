@@ -20,7 +20,7 @@ type Phase = 'setup' | 'preview' | 'running';
 const DURATIONS = [15, 30, 45, 60] as const;
 
 export function Practice() {
-  const { activePlan, setActivePlan } = usePractice();
+  const { activePlan, setActivePlan, exercises } = usePractice();
 
   const [phase, setPhase] = useState<Phase>('setup');
   const [plan, setPlan] = useState<SessionPlan | null>(null);
@@ -47,7 +47,7 @@ export function Practice() {
 
   const build = () => {
     setPlan(
-      generateSession({
+      generateSession(exercises, {
         totalMinutes: duration,
         focus,
         intensity,

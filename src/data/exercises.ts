@@ -238,6 +238,66 @@ export const exercises: Exercise[] = [
     difficulty: 'advanced',
     tags: ['jazz', 'walking'],
   },
+
+  // ── Gospel / Afro-gospel focused drills ─────────────────────
+  {
+    id: 'ex-gospel-numbers',
+    name: 'Number-system roots',
+    category: 'theory',
+    durationMin: 10,
+    instructions:
+      'Call out 1 5 6 4 and play the roots without thinking of note names. Then transpose the same numbers to two new keys.',
+    difficulty: 'beginner',
+    concepts: ['number-system', 'transposition'],
+    progressionId: 'prog-1564',
+    style: 'Contemporary Gospel',
+    tags: ['numbers', 'roots'],
+  },
+  {
+    id: 'ex-gospel-passing',
+    name: 'Walk-ups into the 1',
+    category: 'technique',
+    durationMin: 10,
+    instructions:
+      'Over the praise loop, connect the 4 back to the 1 with a chromatic or diatonic walk-up. Keep the passing tones on the "and".',
+    bpm: 112,
+    difficulty: 'intermediate',
+    concepts: ['passing-tones', 'playing-changes', 'gospel-grooves'],
+    progressionId: 'prog-1564',
+    style: 'Nigerian Gospel',
+    feel: 'straight',
+    tags: ['walk-up', 'passing tones'],
+  },
+  {
+    id: 'ex-gospel-vamp',
+    name: 'Worship vamp dynamics',
+    category: 'creativity',
+    durationMin: 12,
+    instructions:
+      'Vamp on 1 and 4 in 6/8. Build from a whole-note root to a busier fill over eight bars, then bring it back down.',
+    bpm: 68,
+    difficulty: 'beginner',
+    concepts: ['vamps', 'fills', 'groove-pocket'],
+    progressionId: 'prog-worship-1-4',
+    style: 'Worship',
+    feel: '6/8',
+    tags: ['vamp', 'dynamics'],
+  },
+  {
+    id: 'ex-gospel-251',
+    name: 'Play the 2-5-1 turnaround',
+    category: 'loop-practice',
+    durationMin: 12,
+    instructions:
+      'Play the changes over the Sunday Turnaround loop. Target the 3rd of each chord, then add a chromatic approach into the 1.',
+    bpm: 88,
+    difficulty: 'advanced',
+    concepts: ['playing-changes', 'progressions', 'passing-tones'],
+    progressionId: 'prog-6251',
+    style: 'Gospel',
+    feel: 'swing',
+    tags: ['turnaround', 'changes'],
+  },
 ];
 
 export function getExercise(id: string): Exercise | undefined {

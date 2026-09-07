@@ -25,10 +25,13 @@ import {
 
 export function Home() {
   const navigate = useNavigate();
-  const { stats, sessions, averageSessionMin, loops, setActivePlan } =
+  const { stats, sessions, averageSessionMin, loops, exercises, setActivePlan } =
     usePractice();
 
-  const recommended = useMemo(() => recommendedSession(), []);
+  const recommended = useMemo(
+    () => recommendedSession(exercises),
+    [exercises],
+  );
   const [challengeLoop, setChallengeLoop] = useState<Loop | null>(null);
 
   const startRecommended = () => {
@@ -37,7 +40,7 @@ export function Home() {
   };
 
   const quickStart = (focus: CategoryId[], minutes: number) => {
-    setActivePlan(generateSession({ totalMinutes: minutes, focus }));
+    setActivePlan(generateSession(exercises, { totalMinutes: minutes, focus }));
     navigate('/practice');
   };
 

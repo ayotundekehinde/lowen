@@ -129,6 +129,44 @@ export const songs: Song[] = [
       { id: 'song-6-break', name: 'Breakdown', progress: 90 },
     ],
   },
+  {
+    id: 'song-7',
+    title: 'Praise Medley',
+    artist: 'Nigerian Gospel',
+    genre: 'Nigerian Gospel',
+    key: 'D Major',
+    keyRoot: { tonic: 'D', mode: 'major' },
+    bpm: 112,
+    tuning: 'Standard (EADG)',
+    difficulty: 'intermediate',
+    progress: 34,
+    favorite: true,
+    notes:
+      'Fast praise medley — think in numbers, not notes, so you can follow the MD when the key jumps. Nail the walk-ups into 1 and keep the passing tones tasteful.',
+    loopIds: ['loop-gospel-praise', 'loop-worship-vamp'],
+    progressionIds: ['prog-1564', 'prog-praise-4-5-1'],
+    sections: [
+      {
+        id: 'song-7-intro',
+        name: 'Intro',
+        progress: 60,
+        progressionId: 'prog-worship-1-4',
+      },
+      {
+        id: 'song-7-praise',
+        name: 'Praise',
+        progress: 40,
+        progressionId: 'prog-1564',
+      },
+      {
+        id: 'song-7-turn',
+        name: 'Turnaround',
+        progress: 25,
+        progressionId: 'prog-praise-4-5-1',
+      },
+      { id: 'song-7-worship', name: 'Worship', progress: 20 },
+    ],
+  },
 ];
 
 export function getSong(id: string): Song | undefined {

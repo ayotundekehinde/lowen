@@ -27,7 +27,7 @@ const DIFFICULTIES: (Difficulty | 'all')[] = [
 
 export function Library() {
   const navigate = useNavigate();
-  const { songs, loops, setActivePlan } = usePractice();
+  const { songs, loops, exercises, setActivePlan } = usePractice();
 
   const [tab, setTab] = useState<Tab>('all');
   const [query, setQuery] = useState('');
@@ -57,7 +57,7 @@ export function Library() {
         if (favoritesOnly && !l.favorite) return false;
         if (difficulty !== 'all' && l.difficulty !== difficulty) return false;
         if (!q) return true;
-        return [l.name, l.genre, l.key, ...l.tags]
+        return [l.name, l.genre, l.style ?? '', l.key, ...l.tags]
           .join(' ')
           .toLowerCase()
           .includes(q);
@@ -67,7 +67,10 @@ export function Library() {
 
   const practiceLoop = (_loop: Loop) => {
     setActivePlan(
-      generateSession({ totalMinutes: 30, focus: ['loop-practice'] }),
+      generateSession(exercises, {
+        totalMinutes: 30,
+        focus: ['loop-practice'],
+      }),
     );
     navigate('/practice');
   };

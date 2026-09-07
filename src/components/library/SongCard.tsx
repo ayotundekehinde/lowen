@@ -1,12 +1,18 @@
 import { Link } from 'react-router-dom';
 import { ProgressBar } from '@/components/ui/Progress';
+import { ProgressionView } from '@/components/music/ProgressionView';
 import { DifficultyBadge } from '@/components/ui/Badge';
+import { parseKey } from '@/lib/music';
 import type { Song } from '@/lib/types';
 import { usePractice } from '@/store/practiceStore';
 import { Heart, ChevronRight } from 'lucide-react';
 
 export function SongCard({ song }: { song: Song }) {
-  const { toggleSongFavorite } = usePractice();
+  const { toggleSongFavorite, getProgressionById } = usePractice();
+
+  const primaryProgression = song.progressionIds?.length
+    ? getProgressionById(song.progressionIds[0])
+    : undefined;
 
   return (
     <Link
@@ -58,6 +64,18 @@ export function SongCard({ song }: { song: Song }) {
           <dd className="mt-0.5 truncate font-medium text-ink">{song.genre}</dd>
         </div>
       </dl>
+
+      {primaryProgression && (
+        <div className="mt-4">
+          <p className="mb-2 text-[11px] uppercase tracking-wider text-ink-faint">
+            Progression
+          </p>
+          <ProgressionView
+            chords={primaryProgression.chords}
+            musicKey={song.keyRoot ?? parseKey(song.key)}
+          />
+        </div>
+      )}
 
       <div className="mt-5">
         <div className="mb-1.5 flex items-center justify-between text-xs">
