@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/Button';
-import { CategoryBadge } from '@/components/ui/Badge';
-import { categoryColor, INTENSITIES } from '@/lib/categories';
+import { PillarBadge } from '@/components/ui/Badge';
+import { pillarColor, SESSION_MODES } from '@/lib/pillars';
 import { formatMinutes } from '@/lib/format';
 import type { SessionPlan } from '@/lib/types';
 import { Gauge, ListMusic, Play, RefreshCw } from 'lucide-react';
@@ -23,7 +23,7 @@ export function PlanPreview({ plan, onStart, onRegenerate }: PlanPreviewProps) {
             {formatMinutes(plan.totalMinutes)} · {plan.items.length} exercises
           </h2>
           <p className="mt-1 text-sm text-ink-muted">
-            {INTENSITIES[plan.intensity].label} intensity
+            {SESSION_MODES[plan.mode].label}
           </p>
         </div>
         <div className="flex gap-2">
@@ -59,7 +59,7 @@ export function PlanPreview({ plan, onStart, onRegenerate }: PlanPreviewProps) {
 
       <ol className="space-y-3">
         {plan.items.map((item, i) => {
-          const color = categoryColor(item.exercise.category);
+          const color = pillarColor(item.exercise.pillars[0]);
           return (
             <li key={item.id} className="panel panel-hover flex items-center gap-4 p-4">
               <span
@@ -74,7 +74,7 @@ export function PlanPreview({ plan, onStart, onRegenerate }: PlanPreviewProps) {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="font-medium text-ink">{item.exercise.name}</h3>
-                  <CategoryBadge category={item.exercise.category} />
+                  <PillarBadge pillar={item.exercise.pillars[0]} />
                 </div>
                 <p className="mt-1 line-clamp-1 text-sm text-ink-muted">
                   {item.exercise.instructions}

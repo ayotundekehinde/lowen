@@ -9,7 +9,7 @@
  */
 export { songs, getSong } from './songs';
 export { loops, getLoop } from './loops';
-export { exercises, getExercise, exercisesByCategory } from './exercises';
+export { exercises, getExercise, exercisesByPillar } from './exercises';
 export { chordProgressions, getProgression } from './progressions';
 export { sessionHistory } from './sessions';
 export { skills } from './skills';

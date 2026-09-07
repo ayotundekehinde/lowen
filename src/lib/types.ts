@@ -7,17 +7,55 @@
  * component tree.
  */
 
-export type CategoryId =
-  | 'technique'
-  | 'theory'
-  | 'repertoire'
-  | 'creativity'
+/**
+ * The eleven learning pillars — the canonical, first-class taxonomy that every
+ * exercise, session focus and progress statistic is classified against. This is
+ * the single learning classification in Lowen (it replaces the old, generic
+ * `CategoryId` and the parallel `ConceptId`).
+ */
+export type PillarId =
+  | 'groove-pocket'
+  | 'number-system'
+  | 'chord-movement'
+  | 'vamps'
+  | 'passing-notes'
+  | 'fills'
+  | 'transitions'
+  | 'playing-changes'
   | 'ear-training'
-  | 'loop-practice';
+  | 'technique'
+  | 'repertoire';
+
+/**
+ * The musical worlds a Nigerian/Gospel bassist plays in. These are typed
+ * contexts — not free-text tags — so they can drive content, filtering and
+ * session bias rather than acting as cosmetic labels.
+ */
+export type GospelStyle =
+  | 'nigerian-gospel'
+  | 'afro-gospel'
+  | 'praise'
+  | 'worship'
+  | 'highlife'
+  | 'afrobeats'
+  | 'contemporary-gospel'
+  | 'rnb-neo-soul'
+  | 'slow-gospel'
+  | 'gospel-6-8';
+
+/** Alias: a musical context is expressed as a gospel style. */
+export type MusicalContext = GospelStyle;
+
+/** Relative emphasis per pillar, used to weight session generation. */
+export type PillarWeights = Partial<Record<PillarId, number>>;
 
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
 
-export type Intensity = 'chill' | 'normal' | 'push';
+/**
+ * How a session is approached — musical preparation language, not fitness
+ * framing. Each mode gently scales suggested tempos.
+ */
+export type SessionMode = 'warm-up' | 'rehearse' | 'service';
 
 /* ------------------------------------------------------------------ *
  * Musical model (number system, keys, progressions)                   *
@@ -60,16 +98,18 @@ export interface NumberChord {
 
 export type ProgressionKind = 'progression' | 'vamp' | 'turnaround';
 
-/** Rhythmic/stylistic feel of a groove. */
+/**
+ * Rhythmic feel of a groove — strictly how the time is subdivided/placed, never
+ * a genre or style (those live in {@link GospelStyle}).
+ */
 export type Feel =
   | 'straight'
   | 'swing'
   | 'shuffle'
   | 'half-time'
-  | '6/8'
   | 'triplet'
-  | 'afrobeat'
-  | 'highlife';
+  | '6/8'
+  | 'syncopated';
 
 /** A reusable chord progression, stored in the number system. */
 export interface ChordProgression {
@@ -81,7 +121,8 @@ export interface ChordProgression {
   timeSignature?: string;
   /** Display default only; not authoritative. */
   suggestedKey?: string;
-  style?: string;
+  /** The gospel context this progression belongs to. */
+  context?: GospelStyle;
   feel?: Feel;
   tags: string[];
 }
@@ -111,39 +152,27 @@ export interface MusicalKey {
   mode: 'major' | 'minor';
 }
 
-/**
- * Finer-grained gospel/bass concepts used to tag exercises (and, later, to
- * filter and generate). Intentionally separate from the 6 top-level categories
- * so the color-coded category taxonomy stays small.
- */
-export type ConceptId =
-  | 'number-system'
-  | 'progressions'
-  | 'vamps'
-  | 'passing-tones'
-  | 'fills'
-  | 'groove-pocket'
-  | 'playing-changes'
-  | 'transposition'
-  | 'gospel-grooves';
-
 /** A single practiceable drill drawn on to build sessions. */
 export interface Exercise {
   id: string;
   name: string;
-  category: CategoryId;
+  /**
+   * The learning pillars this drill develops. The first entry is the primary
+   * pillar (used for colour/label); additional pillars let one drill serve
+   * multiple areas and power the weighted session generator.
+   */
+  pillars: PillarId[];
   /** Suggested duration in minutes. */
   durationMin: number;
   instructions: string;
   bpm?: number;
   difficulty: Difficulty;
   tags?: string[];
-  /** Gospel/bass concepts this drill develops. */
-  concepts?: ConceptId[];
+  /** The gospel context this drill belongs to, when style-specific. */
+  context?: GospelStyle;
   key?: string;
   progressionId?: string;
   feel?: Feel;
-  style?: string;
 }
 
 /** A named part of a song the player is learning. */
@@ -160,7 +189,8 @@ export interface Song {
   id: string;
   title: string;
   artist: string;
-  genre: string;
+  /** The gospel context this song belongs to. */
+  context: GospelStyle;
   key: string;
   bpm: number;
   tuning: string;
@@ -181,7 +211,8 @@ export interface Song {
 export interface Loop {
   id: string;
   name: string;
-  genre: string;
+  /** The gospel context this loop belongs to. */
+  context: GospelStyle;
   key: string;
   bpm: number;
   timeSignature: string;
@@ -191,8 +222,6 @@ export interface Loop {
   favorite: boolean;
   /** Rhythmic feel of the groove. */
   feel?: Feel;
-  /** Gospel style, e.g. "Nigerian Gospel" (genre stays for broad grouping). */
-  style?: string;
   /** Preferred: reference a shared, reusable progression. */
   progressionId?: string;
   /** Inline progression for one-offs not worth sharing. */
@@ -209,11 +238,12 @@ export interface PracticeSession {
   durationMin: number;
   exercisesCompleted: number;
   exercisesPlanned: number;
-  categories: CategoryId[];
+  /** Pillars touched in this session. */
+  pillars: PillarId[];
   /** 1–5, undefined if not rated. */
   rating?: number;
-  focus?: CategoryId[];
-  intensity?: Intensity;
+  focus?: PillarId[];
+  mode?: SessionMode;
 }
 
 /** A skill the player is developing, with a mock proficiency level. */
@@ -232,8 +262,8 @@ export interface Stats {
   bestStreakDays: number;
   totalMinutes: number;
   totalSessions: number;
-  /** Per-category minutes, for the distribution chart. */
-  minutesByCategory: Record<CategoryId, number>;
+  /** Per-pillar minutes, for the distribution chart. */
+  minutesByPillar: Record<PillarId, number>;
   /** Minutes practiced per weekday for the trailing week (Mon–Sun). */
   weeklyMinutes: number[];
 }
@@ -271,6 +301,7 @@ export interface SessionContext {
   progressionId?: string;
   /** Display key, e.g. "D Major". */
   key?: string;
+  /** Human-readable style label, e.g. "Nigerian Gospel". */
   style?: string;
 }
 
@@ -278,8 +309,8 @@ export interface SessionPlan {
   id: string;
   createdAt: string;
   totalMinutes: number;
-  intensity: Intensity;
-  focus: CategoryId[];
+  mode: SessionMode;
+  focus: PillarId[];
   items: SessionPlanItem[];
   context?: SessionContext;
 }

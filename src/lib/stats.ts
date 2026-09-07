@@ -1,5 +1,5 @@
-import type { CategoryId, PracticeSession, Stats } from './types';
-import { CATEGORY_LIST } from './categories';
+import type { PillarId, PracticeSession, Stats } from './types';
+import { PILLAR_LIST } from './pillars';
 
 /**
  * Totals accumulated before the tracked history window. Keeps lifetime numbers
@@ -11,13 +11,13 @@ export const LIFETIME_BASELINE = {
   bestStreakDays: 21,
 };
 
-function emptyCategoryMap(): Record<CategoryId, number> {
-  return CATEGORY_LIST.reduce(
-    (acc, c) => {
-      acc[c.id] = 0;
+function emptyPillarMap(): Record<PillarId, number> {
+  return PILLAR_LIST.reduce(
+    (acc, p) => {
+      acc[p.id] = 0;
       return acc;
     },
-    {} as Record<CategoryId, number>,
+    {} as Record<PillarId, number>,
   );
 }
 
@@ -61,7 +61,7 @@ export function computeStreak(sessions: PracticeSession[]): number {
 
 /** Aggregate a set of sessions into displayable statistics. */
 export function computeStats(sessions: PracticeSession[]): Stats {
-  const minutesByCategory = emptyCategoryMap();
+  const minutesByPillar = emptyPillarMap();
   const weeklyMinutes = [0, 0, 0, 0, 0, 0, 0];
 
   const now = new Date();
@@ -72,11 +72,11 @@ export function computeStats(sessions: PracticeSession[]): Stats {
   ).getTime();
 
   for (const s of sessions) {
-    const perCat = s.categories.length
-      ? s.durationMin / s.categories.length
+    const perPillar = s.pillars.length
+      ? s.durationMin / s.pillars.length
       : 0;
-    for (const c of s.categories) {
-      minutesByCategory[c] += perCat;
+    for (const p of s.pillars) {
+      minutesByPillar[p] += perPillar;
     }
 
     const d = new Date(s.date);
@@ -99,7 +99,7 @@ export function computeStats(sessions: PracticeSession[]): Stats {
     bestStreakDays: Math.max(LIFETIME_BASELINE.bestStreakDays, currentStreakDays),
     totalMinutes,
     totalSessions,
-    minutesByCategory,
+    minutesByPillar,
     weeklyMinutes,
   };
 }

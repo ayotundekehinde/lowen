@@ -1,22 +1,28 @@
 import type {
-  CategoryId,
   ChordProgression,
   Exercise,
-  Intensity,
+  GospelStyle,
   MusicalKey,
+  PillarId,
+  PillarWeights,
   SessionContext,
+  SessionMode,
   SessionPlan,
   SessionPlanItem,
 } from './types';
-import { INTENSITIES } from './categories';
+import { SESSION_MODES, SESSION_PRESETS } from './pillars';
+import { GOSPEL_STYLES } from './styles';
 import { formatKey, numberLabel } from './music';
 
-/** Concepts we favour when a session is built around a progression. */
-const PROGRESSION_CONCEPTS = new Set([
+/**
+ * Pillars we lean on when a session is built around a specific progression —
+ * the number-system / changes side of playing, where drilling a chart pays off.
+ */
+const PROGRESSION_PILLARS = new Set<PillarId>([
   'number-system',
-  'progressions',
+  'chord-movement',
   'playing-changes',
-  'passing-tones',
+  'passing-notes',
 ]);
 
 let idCounter = 0;
@@ -25,121 +31,144 @@ function uid(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${idCounter}`;
 }
 
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-/**
- * The default focus mix used for the "recommended" session on Home and when the
- * user does not narrow the focus themselves. Ordered as a sensible warm-up →
- * cool-down arc.
- */
-const DEFAULT_FOCUS: CategoryId[] = [
-  'technique',
-  'theory',
-  'loop-practice',
-  'repertoire',
-];
-
 export interface GenerateOptions {
   totalMinutes: number;
-  focus?: CategoryId[];
-  intensity?: Intensity;
+  /** Pillars to draw from. Equal weight unless `weights` is provided. */
+  focus?: PillarId[];
+  /** Explicit pillar weighting (from a preset); overrides `focus` weighting. */
+  weights?: PillarWeights;
+  mode?: SessionMode;
   /** Bias exercise selection toward this progression / number-system work. */
   preferProgressionId?: string;
+  /** Bias exercise selection toward this gospel context. */
+  preferContext?: GospelStyle;
   /** Informational musical context carried onto the plan. */
   context?: SessionContext;
 }
 
 /**
- * Order a category's exercises so that, when a progression is being practiced,
- * exercises tied to that progression (or to progression concepts) come first.
- * Randomised within each tier to keep sessions varied.
+ * Resolve the effective pillar weighting for a request. Explicit weights win;
+ * otherwise an equal-weighted focus; otherwise the balanced daily mix.
  */
-function rankPool(
-  pool: Exercise[],
-  preferProgressionId?: string,
-): Exercise[] {
-  if (!preferProgressionId) return shuffle(pool);
-  const preferred: Exercise[] = [];
-  const rest: Exercise[] = [];
-  for (const e of pool) {
-    const matches =
-      e.progressionId === preferProgressionId ||
-      (e.concepts?.some((c) => PROGRESSION_CONCEPTS.has(c)) ?? false);
-    (matches ? preferred : rest).push(e);
+function resolveWeights(options: GenerateOptions): Record<PillarId, number> {
+  if (options.weights && Object.keys(options.weights).length > 0) {
+    return options.weights as Record<PillarId, number>;
   }
-  return [...shuffle(preferred), ...shuffle(rest)];
+  if (options.focus && options.focus.length > 0) {
+    return Object.fromEntries(options.focus.map((p) => [p, 1])) as Record<
+      PillarId,
+      number
+    >;
+  }
+  return SESSION_PRESETS.daily.weights as Record<PillarId, number>;
 }
 
-function applyTempo(exercise: Exercise, intensity: Intensity): Exercise {
+/**
+ * Turn a weight map into a concrete, ordered list of pillar "slots". Uses a
+ * deterministic proportional pick (highest weight-per-use wins, ties broken by
+ * declaration order) so heavier pillars appear more often and interleave.
+ */
+function weightedPillarOrder(
+  weights: Record<PillarId, number>,
+  count: number,
+): PillarId[] {
+  const pillars = (Object.keys(weights) as PillarId[]).filter(
+    (p) => (weights[p] ?? 0) > 0,
+  );
+  if (pillars.length === 0) return [];
+
+  const used: Partial<Record<PillarId, number>> = {};
+  const order: PillarId[] = [];
+  for (let i = 0; i < count; i++) {
+    let best = pillars[0];
+    let bestScore = -Infinity;
+    for (const p of pillars) {
+      const score = weights[p] / (1 + (used[p] ?? 0));
+      if (score > bestScore) {
+        bestScore = score;
+        best = p;
+      }
+    }
+    used[best] = (used[best] ?? 0) + 1;
+    order.push(best);
+  }
+  return order;
+}
+
+/**
+ * Order a pool so that, when a progression or context is preferred, exercises
+ * tied to it float to the top. Randomised within each tier to keep sessions
+ * varied while staying deterministic in their bias.
+ */
+function rankPool(pool: Exercise[], options: GenerateOptions): Exercise[] {
+  const { preferProgressionId, preferContext } = options;
+  const score = (e: Exercise): number => {
+    let s = 0;
+    if (preferProgressionId && e.progressionId === preferProgressionId) s += 100;
+    if (preferContext && e.context === preferContext) s += 10;
+    if (preferProgressionId && e.pillars.some((p) => PROGRESSION_PILLARS.has(p)))
+      s += 5;
+    return s;
+  };
+  return pool
+    .map((e) => ({ e, s: score(e), r: Math.random() }))
+    .sort((a, b) => b.s - a.s || a.r - b.r)
+    .map((x) => x.e);
+}
+
+function applyTempo(exercise: Exercise, mode: SessionMode): Exercise {
   if (exercise.bpm == null) return exercise;
-  const factor = INTENSITIES[intensity].tempoFactor;
+  const factor = SESSION_MODES[mode].tempoFactor;
   return { ...exercise, bpm: Math.round(exercise.bpm * factor) };
 }
 
 /**
- * Build a concrete practice plan from a duration, a set of focus categories and
- * an intensity. Exercises are drawn from the supplied `pool` (injected by the
- * caller, typically from the store) — this module has no dependency on the mock
- * data layer. One exercise is picked per focus slot, then durations are
- * distributed to fill the requested total.
+ * Build a concrete practice plan. The generator draws from the supplied `pool`
+ * (injected by the caller — this module has no dependency on the mock data
+ * layer) using a single pillar-weighting model: a weight map is expanded into
+ * ordered pillar slots, and one not-yet-used exercise is chosen per slot from
+ * the exercises that develop that pillar, biased toward any preferred
+ * progression/context. Durations are then distributed to fill the total.
  */
 export function generateSession(
   pool: Exercise[],
   options: GenerateOptions,
 ): SessionPlan {
   const { totalMinutes } = options;
-  const intensity: Intensity = options.intensity ?? 'normal';
-  const focus =
-    options.focus && options.focus.length > 0 ? options.focus : DEFAULT_FOCUS;
+  const mode: SessionMode = options.mode ?? 'rehearse';
 
-  // Decide how many exercises fit: roughly one per 12–15 minutes, bounded to the
-  // number of distinct focus categories available.
   const targetCount = Math.max(2, Math.min(6, Math.round(totalMinutes / 12)));
+  const weights = resolveWeights(options);
+  const order = weightedPillarOrder(weights, targetCount);
 
-  // Round-robin through the focus categories, picking a not-yet-used exercise
-  // from each, cycling until we hit the target count.
   const picked: Exercise[] = [];
   const usedIds = new Set<string>();
-  const pools = new Map<CategoryId, Exercise[]>();
+  const rankedByPillar = new Map<PillarId, Exercise[]>();
 
-  let slot = 0;
-  let safety = 0;
-  while (picked.length < targetCount && safety < targetCount * 6) {
-    safety += 1;
-    const category = focus[slot % focus.length];
-    slot += 1;
-
-    if (!pools.has(category)) {
-      pools.set(
-        category,
+  const poolFor = (pillar: PillarId): Exercise[] => {
+    if (!rankedByPillar.has(pillar)) {
+      rankedByPillar.set(
+        pillar,
         rankPool(
-          pool.filter((e) => e.category === category),
-          options.preferProgressionId,
+          pool.filter((e) => e.pillars.includes(pillar)),
+          options,
         ),
       );
     }
-    const categoryPool = pools.get(category)!;
-    const next = categoryPool.find((e) => !usedIds.has(e.id));
+    return rankedByPillar.get(pillar)!;
+  };
+
+  for (const pillar of order) {
+    const next = poolFor(pillar).find((e) => !usedIds.has(e.id));
     if (next) {
       usedIds.add(next.id);
       picked.push(next);
     }
-    // If a category is exhausted we simply move on to the next slot.
-    if (slot % focus.length === 0 && picked.length === usedIds.size) {
-      // continue looping
-    }
   }
 
-  // Fallback: if focus categories couldn't fill the target, top up from anything.
-  if (picked.length < 2) {
-    for (const e of shuffle(pool)) {
+  // Top up from anything if pillars couldn't fill the target (e.g. sparse pool).
+  if (picked.length < targetCount) {
+    for (const e of rankPool(pool, options)) {
       if (picked.length >= targetCount) break;
       if (!usedIds.has(e.id)) {
         usedIds.add(e.id);
@@ -161,18 +190,21 @@ export function generateSession(
     remaining -= share;
     return {
       id: uid('item'),
-      exercise: applyTempo(exercise, intensity),
+      exercise: applyTempo(exercise, mode),
       durationMin: Math.max(1, share),
       status: 'pending',
     };
   });
 
+  // Report the pillars actually practiced (primary pillar of each pick).
+  const focus = Array.from(new Set(picked.map((e) => e.pillars[0])));
+
   return {
     id: uid('plan'),
     createdAt: new Date().toISOString(),
     totalMinutes,
-    intensity,
-    focus,
+    mode,
+    focus: focus.length ? focus : (options.focus ?? []),
     items,
     context: options.context,
   };
@@ -181,11 +213,20 @@ export function generateSession(
 export interface ProgressionSessionOptions {
   progression: ChordProgression;
   key: MusicalKey;
-  focus?: CategoryId[];
+  weights?: PillarWeights;
   totalMinutes?: number;
-  intensity?: Intensity;
-  style?: string;
+  mode?: SessionMode;
+  /** Display style label for the session banner. */
+  styleLabel?: string;
 }
+
+/** Default weighting for a progression-focused session. */
+const PROGRESSION_WEIGHTS: PillarWeights = {
+  'chord-movement': 3,
+  'number-system': 2,
+  'playing-changes': 2,
+  'passing-notes': 1,
+};
 
 /**
  * Build a session around a specific progression in a specific key, reusing the
@@ -197,25 +238,29 @@ export function generateProgressionSession(
   {
     progression,
     key,
-    focus,
+    weights,
     totalMinutes = 30,
-    intensity = 'normal',
-    style,
+    mode = 'rehearse',
+    styleLabel,
   }: ProgressionSessionOptions,
 ): SessionPlan {
   const numbers = progression.chords.map(numberLabel).join(' → ');
+  const style =
+    styleLabel ??
+    (progression.context ? GOSPEL_STYLES[progression.context].label : undefined);
   const context: SessionContext = {
     label: `${numbers} · ${formatKey(key)}`,
     progressionId: progression.id,
     key: formatKey(key),
-    style: style ?? progression.style,
+    style,
   };
 
   return generateSession(pool, {
     totalMinutes,
-    intensity,
-    focus: focus ?? ['loop-practice', 'theory'],
+    mode,
+    weights: weights ?? PROGRESSION_WEIGHTS,
     preferProgressionId: progression.id,
+    preferContext: progression.context,
     context,
   });
 }
@@ -224,7 +269,7 @@ export function generateProgressionSession(
 export function recommendedSession(pool: Exercise[]): SessionPlan {
   return generateSession(pool, {
     totalMinutes: 50,
-    focus: DEFAULT_FOCUS,
-    intensity: 'normal',
+    weights: SESSION_PRESETS.daily.weights,
+    mode: 'rehearse',
   });
 }

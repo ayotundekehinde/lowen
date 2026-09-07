@@ -3,9 +3,9 @@ import { ExercisePlayer } from './ExercisePlayer';
 import { SessionSummary } from './SessionSummary';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/cn';
-import { categoryColor } from '@/lib/categories';
+import { pillarColor } from '@/lib/pillars';
 import { formatMinutes } from '@/lib/format';
-import type { CategoryId, PlanItemStatus, PracticeSession, SessionPlan } from '@/lib/types';
+import type { PillarId, PlanItemStatus, PracticeSession, SessionPlan } from '@/lib/types';
 import { usePractice } from '@/store/practiceStore';
 import { Check, SkipForward, X } from 'lucide-react';
 
@@ -45,10 +45,10 @@ export function SessionRunner({ plan, onExit }: SessionRunnerProps) {
 
   const summaryData = useMemo(() => {
     const minutes = completedItems.reduce((sum, it) => sum + it.durationMin, 0);
-    const categories = Array.from(
-      new Set(completedItems.map((it) => it.exercise.category)),
-    ) as CategoryId[];
-    return { minutes, categories };
+    const pillars = Array.from(
+      new Set(completedItems.flatMap((it) => it.exercise.pillars)),
+    ) as PillarId[];
+    return { minutes, pillars };
   }, [completedItems]);
 
   const handleSave = (rating: number) => {
@@ -59,10 +59,10 @@ export function SessionRunner({ plan, onExit }: SessionRunnerProps) {
       durationMin: summaryData.minutes || plan.totalMinutes,
       exercisesCompleted: completedItems.length,
       exercisesPlanned: plan.items.length,
-      categories: summaryData.categories,
+      pillars: summaryData.pillars,
       rating: rating || undefined,
       focus: plan.focus,
-      intensity: plan.intensity,
+      mode: plan.mode,
     };
     recordSession(session);
     onExit();
@@ -74,7 +74,7 @@ export function SessionRunner({ plan, onExit }: SessionRunnerProps) {
         plan={plan}
         completedCount={completedItems.length}
         minutes={summaryData.minutes}
-        categories={summaryData.categories}
+        pillars={summaryData.pillars}
         onSave={handleSave}
         onDiscard={onExit}
       />
@@ -108,7 +108,7 @@ export function SessionRunner({ plan, onExit }: SessionRunnerProps) {
       <div className="mb-8 flex gap-2 overflow-x-auto pb-1">
         {plan.items.map((it, i) => {
           const status = statuses[i];
-          const color = categoryColor(it.exercise.category);
+          const color = pillarColor(it.exercise.pillars[0]);
           const done = status === 'completed';
           const skipped = status === 'skipped';
           return (

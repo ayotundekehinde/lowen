@@ -1,17 +1,17 @@
 import { cn } from '@/lib/cn';
-import { categoryColor, CATEGORIES } from '@/lib/categories';
-import type { CategoryId, Difficulty } from '@/lib/types';
+import { pillarColor, PILLARS } from '@/lib/pillars';
+import type { PillarId, Difficulty } from '@/lib/types';
 
-export function CategoryBadge({
-  category,
+export function PillarBadge({
+  pillar,
   className,
   withDot = true,
 }: {
-  category: CategoryId;
+  pillar: PillarId;
   className?: string;
   withDot?: boolean;
 }) {
-  const color = categoryColor(category);
+  const color = pillarColor(pillar);
   return (
     <span
       className={cn(
@@ -29,16 +29,16 @@ export function CategoryBadge({
           style={{ backgroundColor: color }}
         />
       )}
-      {CATEGORIES[category].label}
+      {PILLARS[pillar].label}
     </span>
   );
 }
 
-export function CategoryDot({ category }: { category: CategoryId }) {
+export function PillarDot({ pillar }: { pillar: PillarId }) {
   return (
     <span
       className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
-      style={{ backgroundColor: categoryColor(category) }}
+      style={{ backgroundColor: pillarColor(pillar) }}
     />
   );
 }

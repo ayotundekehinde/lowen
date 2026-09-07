@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { ChordProgression, MusicalKey, NumberChord } from '@/lib/types';
 import { parseKey, renderProgression, formatKey } from '@/lib/music';
+import { GOSPEL_STYLES } from '@/lib/styles';
 import { KeySelector } from './KeySelector';
 import { Button } from '@/components/ui/Button';
 import { Dumbbell } from 'lucide-react';
@@ -117,7 +118,9 @@ export function ProgressionCard({
           </h3>
           <p className="mt-0.5 text-xs capitalize text-ink-muted">
             {progression.kind}
-            {progression.style ? ` · ${progression.style}` : ''}
+            {progression.context
+              ? ` · ${GOSPEL_STYLES[progression.context].label}`
+              : ''}
             {!keySelector ? ` · ${formatKey(activeKey)}` : ''}
           </p>
         </div>

@@ -7,6 +7,8 @@ import { ProgressionView } from '@/components/music/ProgressionView';
 import { WaveBars } from '@/components/loops/WaveBars';
 import { ChallengeOverlay } from '@/components/loops/ChallengeOverlay';
 import { parseKey, formatKey } from '@/lib/music';
+import { GOSPEL_STYLES } from '@/lib/styles';
+import { SESSION_PRESETS } from '@/lib/pillars';
 import {
   generateProgressionSession,
   generateSession,
@@ -68,25 +70,27 @@ export function LoopDetail() {
 
   const isPreview = formatKey(previewKey) !== formatKey(canonicalKey);
 
+  const styleLabel = GOSPEL_STYLES[loop.context].label;
+
   const practiceThis = () => {
     if (progression) {
       setActivePlan(
         generateProgressionSession(exercises, {
           progression,
           key: previewKey,
-          focus: ['loop-practice', 'theory'],
-          style: loop.style,
+          styleLabel,
         }),
       );
     } else {
       setActivePlan(
         generateSession(exercises, {
           totalMinutes: 30,
-          focus: ['loop-practice'],
+          weights: SESSION_PRESETS.groove.weights,
+          preferContext: loop.context,
           context: {
             label: `${loop.name} · ${formatKey(previewKey)}`,
             key: formatKey(previewKey),
-            style: loop.style,
+            style: styleLabel,
           },
         }),
       );
@@ -104,7 +108,7 @@ export function LoopDetail() {
       </button>
 
       <PageHeader
-        eyebrow={loop.style ?? loop.genre}
+        eyebrow={styleLabel}
         title={loop.name}
         subtitle={
           loop.feel ? (
@@ -146,7 +150,7 @@ export function LoopDetail() {
 
       {/* Musical facts */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Fact label="Style" value={loop.style ?? loop.genre} />
+        <Fact label="Style" value={styleLabel} />
         <Fact label="Key" value={loop.key} hint="canonical" />
         <Fact label="BPM" value={`${loop.bpm}`} />
         <Fact label="Meter" value={loop.timeSignature} />

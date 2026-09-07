@@ -3,6 +3,7 @@ import { ProgressBar } from '@/components/ui/Progress';
 import { ProgressionView } from '@/components/music/ProgressionView';
 import { DifficultyBadge } from '@/components/ui/Badge';
 import { parseKey } from '@/lib/music';
+import { GOSPEL_STYLES } from '@/lib/styles';
 import type { Song } from '@/lib/types';
 import { usePractice } from '@/store/practiceStore';
 import { Heart, ChevronRight } from 'lucide-react';
@@ -59,9 +60,11 @@ export function SongCard({ song }: { song: Song }) {
         </div>
         <div>
           <dt className="text-[11px] uppercase tracking-wider text-ink-faint">
-            Genre
+            Style
           </dt>
-          <dd className="mt-0.5 truncate font-medium text-ink">{song.genre}</dd>
+          <dd className="mt-0.5 truncate font-medium text-ink">
+            {GOSPEL_STYLES[song.context].label}
+          </dd>
         </div>
       </dl>
 

@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/Button';
 import { PlanPreview } from '@/components/session/PlanPreview';
 import { SessionRunner } from '@/components/session/SessionRunner';
 import {
-  CATEGORY_LIST,
-  INTENSITY_LIST,
-  categoryColor,
-} from '@/lib/categories';
+  PILLAR_LIST,
+  SESSION_MODE_LIST,
+  pillarColor,
+} from '@/lib/pillars';
 import { generateSession } from '@/lib/sessionGenerator';
-import type { CategoryId, Intensity, SessionPlan } from '@/lib/types';
+import type { PillarId, SessionMode, SessionPlan } from '@/lib/types';
 import { usePractice } from '@/store/practiceStore';
 import { Sparkles } from 'lucide-react';
 
@@ -26,8 +26,8 @@ export function Practice() {
   const [plan, setPlan] = useState<SessionPlan | null>(null);
 
   const [duration, setDuration] = useState<number>(30);
-  const [focus, setFocus] = useState<CategoryId[]>([]);
-  const [intensity, setIntensity] = useState<Intensity>('normal');
+  const [focus, setFocus] = useState<PillarId[]>([]);
+  const [mode, setMode] = useState<SessionMode>('rehearse');
 
   // Consume a plan handed over from Home (Start Session / Quick Start).
   useEffect(() => {
@@ -40,7 +40,7 @@ export function Practice() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePlan]);
 
-  const toggleFocus = (id: CategoryId) =>
+  const toggleFocus = (id: PillarId) =>
     setFocus((prev) =>
       prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id],
     );
@@ -50,7 +50,7 @@ export function Practice() {
       generateSession(exercises, {
         totalMinutes: duration,
         focus,
-        intensity,
+        mode,
       }),
     );
     setPhase('preview');
@@ -87,7 +87,7 @@ export function Practice() {
       <PageHeader
         eyebrow="Practice"
         title="Design your session"
-        subtitle="Pick a length, choose what to work on, and set the intensity. We'll assemble a focused session from your exercise library."
+        subtitle="Pick a length, choose the pillars to work on, and set how you're playing it. We'll assemble a focused session from your drill library."
       />
 
       {/* Duration */}
@@ -105,22 +105,22 @@ export function Practice() {
         />
       </section>
 
-      {/* Focus */}
+      {/* Pillars */}
       <section>
         <SectionLabel
           index="02"
-          title="Focus"
-          hint={focus.length ? `${focus.length} selected` : 'All areas'}
+          title="Pillars"
+          hint={focus.length ? `${focus.length} selected` : 'All pillars'}
         />
         <div className="flex flex-wrap gap-2">
-          {CATEGORY_LIST.map((cat) => (
+          {PILLAR_LIST.map((pillar) => (
             <Chip
-              key={cat.id}
-              active={focus.includes(cat.id)}
-              onClick={() => toggleFocus(cat.id)}
-              color={categoryColor(cat.id)}
+              key={pillar.id}
+              active={focus.includes(pillar.id)}
+              onClick={() => toggleFocus(pillar.id)}
+              color={pillarColor(pillar.id)}
             >
-              {cat.label}
+              {pillar.label}
             </Chip>
           ))}
         </div>
@@ -129,17 +129,17 @@ export function Practice() {
         </p>
       </section>
 
-      {/* Intensity */}
+      {/* Mode */}
       <section>
-        <SectionLabel index="03" title="Intensity" />
+        <SectionLabel index="03" title="How you're playing it" />
         <SegmentedControl
           columns={3}
-          value={intensity}
-          onChange={(v) => setIntensity(v)}
-          options={INTENSITY_LIST.map((i) => ({
-            value: i.id,
-            label: i.label,
-            hint: i.description,
+          value={mode}
+          onChange={(v) => setMode(v)}
+          options={SESSION_MODE_LIST.map((m) => ({
+            value: m.id,
+            label: m.label,
+            hint: m.description,
           }))}
         />
       </section>
