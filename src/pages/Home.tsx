@@ -281,9 +281,9 @@ function WeekBars() {
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-muted">
         Weekly activity
       </p>
-      <div className="flex items-end justify-between gap-2" style={{ height: 72 }}>
+      <div className="flex items-stretch justify-between gap-2" style={{ height: 72 }}>
         {stats.weeklyMinutes.map((m, i) => (
-          <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
+          <div key={i} className="flex h-full flex-1 flex-col items-center gap-1.5">
             <div className="flex w-full flex-1 items-end">
               <div
                 className="w-full rounded-md bg-accent/80 transition-[height] duration-500"
