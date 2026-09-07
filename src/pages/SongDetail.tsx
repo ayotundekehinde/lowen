@@ -12,6 +12,8 @@ import {
   generateProgressionSession,
 } from '@/lib/sessionGenerator';
 import { parseKey } from '@/lib/music';
+import { GOSPEL_STYLES } from '@/lib/styles';
+import { SESSION_PRESETS } from '@/lib/pillars';
 import type { Loop, MusicalKey } from '@/lib/types';
 import { usePractice } from '@/store/practiceStore';
 import {
@@ -61,18 +63,29 @@ export function SongDetail() {
     .map((id) => getProgressionById(id))
     .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
+  const styleLabel = song ? GOSPEL_STYLES[song.context].label : undefined;
+
   const practiceSong = () => {
+    if (!song) return;
     setActivePlan(
-      generateSession(exercises, { totalMinutes: 30, focus: ['repertoire'] }),
+      generateSession(exercises, {
+        totalMinutes: 30,
+        weights: SESSION_PRESETS.song.weights,
+        preferContext: song.context,
+        context: { label: song.title, key: song.key, style: styleLabel },
+      }),
     );
     navigate('/practice');
   };
 
   const practiceWithLoop = () => {
+    if (!song) return;
     setActivePlan(
       generateSession(exercises, {
         totalMinutes: 30,
-        focus: ['loop-practice'],
+        weights: SESSION_PRESETS.groove.weights,
+        preferContext: song.context,
+        context: { label: song.title, key: song.key, style: styleLabel },
       }),
     );
     navigate('/practice');
@@ -93,7 +106,7 @@ export function SongDetail() {
       </button>
 
       <PageHeader
-        eyebrow={song.genre}
+        eyebrow={styleLabel}
         title={song.title}
         subtitle={
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -233,8 +246,7 @@ export function SongDetail() {
                     generateProgressionSession(exercises, {
                       progression: prog,
                       key,
-                      focus: ['repertoire', 'theory'],
-                      style: song.genre,
+                      styleLabel,
                     }),
                   );
                   navigate('/practice');

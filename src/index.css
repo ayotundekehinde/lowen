@@ -34,13 +34,26 @@
   --color-accent-soft: #f0bd6e;
   --color-accent-deep: #b97d24;
 
-  /* Category / semantic hues (muted, non-neon) */
-  --color-technique: #e0894a;
-  --color-theory: #5fa8d3;
-  --color-repertoire: #b08ad9;
-  --color-creativity: #e0698f;
-  --color-ear: #5fc2a3;
-  --color-loop: #d7b357;
+  /* Pillar hues (muted, non-neon) */
+  --color-pillar-groove-pocket: #e0894a;
+  --color-pillar-number-system: #5fa8d3;
+  --color-pillar-chord-movement: #7b9fd4;
+  --color-pillar-vamps: #b08ad9;
+  --color-pillar-passing-notes: #c4a35a;
+  --color-pillar-fills: #e0698f;
+  --color-pillar-transitions: #6bbf83;
+  --color-pillar-playing-changes: #d7b357;
+  --color-pillar-ear-training: #5fc2a3;
+  --color-pillar-technique: #e0894a;
+  --color-pillar-repertoire: #b08ad9;
+
+  /* Legacy aliases (unused by pillars, kept for any stray refs) */
+  --color-technique: var(--color-pillar-technique);
+  --color-theory: var(--color-pillar-number-system);
+  --color-repertoire: var(--color-pillar-repertoire);
+  --color-creativity: var(--color-pillar-fills);
+  --color-ear: var(--color-pillar-ear-training);
+  --color-loop: var(--color-pillar-playing-changes);
 
   --color-good: #6bbf83;
   --color-danger: #d9695f;

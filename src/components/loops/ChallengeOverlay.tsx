@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Tag } from '@/components/ui/Badge';
 import { useCountdown } from '@/hooks/useCountdown';
 import { generateChallenge } from '@/lib/challenges';
+import { GOSPEL_STYLES } from '@/lib/styles';
 import type { Challenge, Loop } from '@/lib/types';
 import { Pause, Play, RefreshCw, Sparkles, X } from 'lucide-react';
 
@@ -95,7 +96,7 @@ export function ChallengeOverlay({ loop, onClose }: ChallengeOverlayProps) {
               ))}
             </ul>
             <div className="mt-4">
-              <Tag>{loop.genre}</Tag>
+              <Tag>{GOSPEL_STYLES[loop.context].label}</Tag>
             </div>
           </div>
 

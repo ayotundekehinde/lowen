@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StatCard } from '@/components/ui/StatCard';
 import { ProgressBar } from '@/components/ui/Progress';
-import { CategoryBadge } from '@/components/ui/Badge';
-import { CATEGORIES, CATEGORY_LIST, categoryColor } from '@/lib/categories';
+import { PillarBadge } from '@/components/ui/Badge';
+import { PILLARS, PILLAR_LIST, pillarColor } from '@/lib/pillars';
 import { formatMinutes, relativeDay } from '@/lib/format';
 import { usePractice } from '@/store/practiceStore';
 import {
@@ -19,9 +19,9 @@ export function Progress() {
   const { stats, sessions, skills, averageSessionMin } = usePractice();
 
   const distribution = useMemo(() => {
-    const entries = CATEGORY_LIST.map((c) => ({
-      category: c.id,
-      minutes: Math.round(stats.minutesByCategory[c.id]),
+    const entries = PILLAR_LIST.map((p) => ({
+      pillar: p.id,
+      minutes: Math.round(stats.minutesByPillar[p.id]),
     }));
     const max = Math.max(1, ...entries.map((e) => e.minutes));
     const total = entries.reduce((sum, e) => sum + e.minutes, 0) || 1;
@@ -49,13 +49,13 @@ export function Progress() {
           value={<span className="tnum">{stats.totalSessions}</span>}
           hint="completed"
           icon={<ListChecks size={16} />}
-          accent="var(--color-theory)"
+          accent={pillarColor('chord-movement')}
         />
         <StatCard
           label="Avg session"
           value={<span className="tnum">{averageSessionMin}m</span>}
           icon={<Timer size={16} />}
-          accent="var(--color-repertoire)"
+          accent={pillarColor('repertoire')}
         />
         <StatCard
           label="Streak"
@@ -69,7 +69,7 @@ export function Progress() {
           }
           hint="current / best"
           icon={<Flame size={16} />}
-          accent="var(--color-technique)"
+          accent={pillarColor('groove-pocket')}
         />
       </section>
 
@@ -83,19 +83,19 @@ export function Progress() {
             Where your time has gone recently.
           </p>
           <div className="mt-5 space-y-4">
-            {distribution.entries.map(({ category, minutes }) => {
+            {distribution.entries.map(({ pillar, minutes }) => {
               const pct = Math.round(
                 (minutes / distribution.total) * 100,
               );
               return (
-                <div key={category}>
+                <div key={pillar}>
                   <div className="mb-1.5 flex items-center justify-between text-sm">
                     <span className="flex items-center gap-2 font-medium text-ink-soft">
                       <span
                         className="h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: categoryColor(category) }}
+                        style={{ backgroundColor: pillarColor(pillar) }}
                       />
-                      {CATEGORIES[category].label}
+                      {PILLARS[pillar].label}
                     </span>
                     <span className="tnum text-ink-muted">
                       {formatMinutes(minutes)}
@@ -104,7 +104,7 @@ export function Progress() {
                   </div>
                   <ProgressBar
                     value={(minutes / distribution.max) * 100}
-                    color={categoryColor(category)}
+                    color={pillarColor(pillar)}
                   />
                 </div>
               );
@@ -118,7 +118,7 @@ export function Progress() {
             Skill overview
           </h2>
           <p className="mt-1 text-sm text-ink-muted">
-            Mock proficiency across core bass skills.
+            Mock proficiency across core gospel-bass competencies.
           </p>
           <div className="mt-5 space-y-4">
             {skills.map((skill) => (
@@ -162,8 +162,8 @@ export function Progress() {
               </div>
 
               <div className="flex flex-1 flex-wrap gap-1.5">
-                {s.categories.map((c) => (
-                  <CategoryBadge key={c} category={c} withDot={false} />
+                {s.pillars.map((p) => (
+                  <PillarBadge key={p} pillar={p} withDot={false} />
                 ))}
               </div>
 

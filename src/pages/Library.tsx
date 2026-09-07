@@ -6,6 +6,8 @@ import { LoopCard } from '@/components/loops/LoopCard';
 import { ChallengeOverlay } from '@/components/loops/ChallengeOverlay';
 import { cn } from '@/lib/cn';
 import { generateSession } from '@/lib/sessionGenerator';
+import { SESSION_PRESETS } from '@/lib/pillars';
+import { GOSPEL_STYLES } from '@/lib/styles';
 import type { Difficulty, Loop } from '@/lib/types';
 import { usePractice } from '@/store/practiceStore';
 import { Heart, Search, X } from 'lucide-react';
@@ -43,7 +45,7 @@ export function Library() {
         if (favoritesOnly && !s.favorite) return false;
         if (difficulty !== 'all' && s.difficulty !== difficulty) return false;
         if (!q) return true;
-        return [s.title, s.artist, s.genre, s.key]
+        return [s.title, s.artist, GOSPEL_STYLES[s.context].label, s.key]
           .join(' ')
           .toLowerCase()
           .includes(q);
@@ -57,7 +59,7 @@ export function Library() {
         if (favoritesOnly && !l.favorite) return false;
         if (difficulty !== 'all' && l.difficulty !== difficulty) return false;
         if (!q) return true;
-        return [l.name, l.genre, l.style ?? '', l.key, ...l.tags]
+        return [l.name, GOSPEL_STYLES[l.context].label, l.key, ...l.tags]
           .join(' ')
           .toLowerCase()
           .includes(q);
@@ -65,11 +67,12 @@ export function Library() {
     [loops, favoritesOnly, difficulty, q],
   );
 
-  const practiceLoop = (_loop: Loop) => {
+  const practiceLoop = (loop: Loop) => {
     setActivePlan(
       generateSession(exercises, {
         totalMinutes: 30,
-        focus: ['loop-practice'],
+        weights: SESSION_PRESETS.groove.weights,
+        preferContext: loop.context,
       }),
     );
     navigate('/practice');

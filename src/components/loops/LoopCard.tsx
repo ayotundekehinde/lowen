@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { DifficultyBadge, Tag } from '@/components/ui/Badge';
 import { cn } from '@/lib/cn';
 import { parseKey } from '@/lib/music';
+import { GOSPEL_STYLES } from '@/lib/styles';
 import type { Loop } from '@/lib/types';
 import { usePractice } from '@/store/practiceStore';
 import { Dumbbell, Heart, Pause, Play, Shuffle } from 'lucide-react';
@@ -37,7 +38,7 @@ export function LoopCard({ loop, onPractice, onChallenge }: LoopCardProps) {
             {loop.name}
           </Link>
           <p className="mt-0.5 truncate text-sm text-ink-muted">
-            {loop.style ?? loop.genre}
+            {GOSPEL_STYLES[loop.context].label}
             {loop.feel ? ` · ${loop.feel}` : ''}
           </p>
         </div>

@@ -1,8 +1,8 @@
 import { useCountdown } from '@/hooks/useCountdown';
 import { TimerDial } from './TimerDial';
 import { Button } from '@/components/ui/Button';
-import { CategoryBadge, DifficultyBadge } from '@/components/ui/Badge';
-import { categoryColor, CATEGORIES } from '@/lib/categories';
+import { PillarBadge, DifficultyBadge } from '@/components/ui/Badge';
+import { pillarColor, PILLARS } from '@/lib/pillars';
 import type { SessionPlanItem } from '@/lib/types';
 import {
   Check,
@@ -30,7 +30,8 @@ export function ExercisePlayer({
 }: ExercisePlayerProps) {
   const seconds = item.durationMin * 60;
   const { exercise } = item;
-  const color = categoryColor(exercise.category);
+  const primaryPillar = exercise.pillars[0];
+  const color = pillarColor(primaryPillar);
 
   const timer = useCountdown({
     seconds,
@@ -43,14 +44,16 @@ export function ExercisePlayer({
         <span className="tnum">
           Exercise {index + 1} / {total}
         </span>
-        <span>{CATEGORIES[exercise.category].label}</span>
+        <span>{PILLARS[primaryPillar].label}</span>
       </div>
 
       <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_auto]">
         {/* Details */}
         <div className="order-2 lg:order-1">
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <CategoryBadge category={exercise.category} />
+            {exercise.pillars.slice(0, 2).map((p) => (
+              <PillarBadge key={p} pillar={p} />
+            ))}
             <DifficultyBadge difficulty={exercise.difficulty} />
           </div>
           <h2 className="font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">

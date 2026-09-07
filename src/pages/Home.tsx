@@ -1,14 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { StatCard } from '@/components/ui/StatCard';
-import { CategoryDot } from '@/components/ui/Badge';
-import { ChallengeOverlay } from '@/components/loops/ChallengeOverlay';
-import { CATEGORIES, categoryColor } from '@/lib/categories';
+import { PillarDot } from '@/components/ui/Badge';
+import { PILLARS, pillarColor, SESSION_PRESETS } from '@/lib/pillars';
+import type { SessionPresetId } from '@/lib/pillars';
 import { generateSession, recommendedSession } from '@/lib/sessionGenerator';
 import { formatMinutes } from '@/lib/format';
-import type { CategoryId, Loop } from '@/lib/types';
 import { usePractice } from '@/store/practiceStore';
 import {
   Play,
@@ -17,37 +16,37 @@ import {
   ListChecks,
   Timer,
   Repeat,
+  ListMusic,
+  Hash,
   Music4,
-  Shuffle,
+  Activity,
   Sparkles,
   ArrowRight,
 } from 'lucide-react';
 
 export function Home() {
   const navigate = useNavigate();
-  const { stats, sessions, averageSessionMin, loops, exercises, setActivePlan } =
+  const { stats, sessions, averageSessionMin, exercises, setActivePlan } =
     usePractice();
 
   const recommended = useMemo(
     () => recommendedSession(exercises),
     [exercises],
   );
-  const [challengeLoop, setChallengeLoop] = useState<Loop | null>(null);
 
   const startRecommended = () => {
     setActivePlan(recommended);
     navigate('/practice');
   };
 
-  const quickStart = (focus: CategoryId[], minutes: number) => {
-    setActivePlan(generateSession(exercises, { totalMinutes: minutes, focus }));
+  const quickStart = (preset: SessionPresetId, minutes: number) => {
+    setActivePlan(
+      generateSession(exercises, {
+        totalMinutes: minutes,
+        weights: SESSION_PRESETS[preset].weights,
+      }),
+    );
     navigate('/practice');
-  };
-
-  const randomChallenge = () => {
-    const pool = loops.length ? loops : [];
-    if (!pool.length) return;
-    setChallengeLoop(pool[Math.floor(Math.random() * pool.length)]);
   };
 
   const greeting = getGreeting();
@@ -93,9 +92,9 @@ export function Home() {
                   key={item.id}
                   className="flex items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3"
                 >
-                  <CategoryDot category={item.exercise.category} />
+                  <PillarDot pillar={item.exercise.pillars[0]} />
                   <span className="text-sm font-medium text-ink-soft">
-                    {CATEGORIES[item.exercise.category].label}
+                    {PILLARS[item.exercise.pillars[0]].label}
                   </span>
                   <span className="mx-2 hidden h-px flex-1 bg-line sm:block" />
                   <span className="truncate text-sm text-ink-muted">
@@ -144,19 +143,19 @@ export function Home() {
               value={<span className="tnum">{formatMinutes(stats.totalMinutes)}</span>}
               hint="all-time"
               icon={<Clock size={16} />}
-              accent="var(--color-theory)"
+              accent={pillarColor('chord-movement')}
             />
             <StatCard
               label="Sessions"
               value={<span className="tnum">{stats.totalSessions}</span>}
               icon={<ListChecks size={16} />}
-              accent="var(--color-ear)"
+              accent={pillarColor('ear-training')}
             />
             <StatCard
               label="Avg length"
               value={<span className="tnum">{averageSessionMin}m</span>}
               icon={<Timer size={16} />}
-              accent="var(--color-repertoire)"
+              accent={pillarColor('repertoire')}
             />
           </div>
           <WeekBars />
@@ -168,30 +167,36 @@ export function Home() {
         <h2 className="mb-4 font-display text-lg font-semibold text-ink">
           Quick start
         </h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <QuickStartButton
             icon={<Repeat size={20} />}
-            label="Practice with a Loop"
-            color={categoryColor('loop-practice')}
-            onClick={() => quickStart(['loop-practice'], 30)}
+            label="Practice a Vamp"
+            color={pillarColor('vamps')}
+            onClick={() => quickStart('vamp', 30)}
+          />
+          <QuickStartButton
+            icon={<ListMusic size={20} />}
+            label="Practice a Progression"
+            color={pillarColor('chord-movement')}
+            onClick={() => quickStart('progression', 30)}
+          />
+          <QuickStartButton
+            icon={<Hash size={20} />}
+            label="Number System"
+            color={pillarColor('number-system')}
+            onClick={() => quickStart('number-system', 30)}
           />
           <QuickStartButton
             icon={<Music4 size={20} />}
             label="Practice a Song"
-            color={categoryColor('repertoire')}
-            onClick={() => quickStart(['repertoire'], 30)}
+            color={pillarColor('repertoire')}
+            onClick={() => quickStart('song', 30)}
           />
           <QuickStartButton
-            icon={<Shuffle size={20} />}
-            label="Random Challenge"
-            color={categoryColor('creativity')}
-            onClick={randomChallenge}
-          />
-          <QuickStartButton
-            icon={<Sparkles size={20} />}
-            label="Free Practice"
-            color="var(--color-accent)"
-            onClick={() => navigate('/practice')}
+            icon={<Activity size={20} />}
+            label="Groove & Pocket"
+            color={pillarColor('groove-pocket')}
+            onClick={() => quickStart('groove', 30)}
           />
         </div>
       </section>
@@ -214,11 +219,11 @@ export function Home() {
             {sessions.slice(0, 3).map((s) => (
               <div key={s.id} className="flex items-center gap-3 px-5 py-3.5">
                 <div className="flex -space-x-1">
-                  {s.categories.slice(0, 4).map((c) => (
+                  {s.pillars.slice(0, 4).map((p) => (
                     <span
-                      key={c}
+                      key={p}
                       className="h-2.5 w-2.5 rounded-full ring-2 ring-panel"
-                      style={{ backgroundColor: categoryColor(c) }}
+                      style={{ backgroundColor: pillarColor(p) }}
                     />
                   ))}
                 </div>
@@ -232,13 +237,6 @@ export function Home() {
             ))}
           </div>
         </section>
-      )}
-
-      {challengeLoop && (
-        <ChallengeOverlay
-          loop={challengeLoop}
-          onClose={() => setChallengeLoop(null)}
-        />
       )}
     </div>
   );

@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { CategoryBadge } from '@/components/ui/Badge';
+import { PillarBadge } from '@/components/ui/Badge';
 import { formatMinutes } from '@/lib/format';
-import { CATEGORIES } from '@/lib/categories';
-import type { CategoryId, SessionPlan } from '@/lib/types';
+import { PILLARS, SESSION_MODES } from '@/lib/pillars';
+import type { PillarId, SessionPlan } from '@/lib/types';
 import { Check, Star, Trophy, X } from 'lucide-react';
 
 interface SessionSummaryProps {
   plan: SessionPlan;
   completedCount: number;
   minutes: number;
-  categories: CategoryId[];
+  pillars: PillarId[];
   onSave: (rating: number) => void;
   onDiscard: () => void;
 }
@@ -19,7 +19,7 @@ export function SessionSummary({
   plan,
   completedCount,
   minutes,
-  categories,
+  pillars,
   onSave,
   onDiscard,
 }: SessionSummaryProps) {
@@ -55,21 +55,21 @@ export function SessionSummary({
           <div className="mt-1 text-xs text-ink-muted">Exercises done</div>
         </div>
         <div className="panel col-span-2 p-4 text-center sm:col-span-1">
-          <div className="font-display text-2xl font-semibold text-ink capitalize">
-            {plan.intensity === 'push' ? 'Push' : plan.intensity}
+          <div className="font-display text-2xl font-semibold text-ink">
+            {SESSION_MODES[plan.mode].label}
           </div>
-          <div className="mt-1 text-xs text-ink-muted">Intensity</div>
+          <div className="mt-1 text-xs text-ink-muted">Mode</div>
         </div>
       </div>
 
       <div className="panel mt-3 p-5">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-ink-muted">
-          Categories practiced
+          Pillars practiced
         </p>
-        {categories.length ? (
+        {pillars.length ? (
           <div className="flex flex-wrap gap-2">
-            {categories.map((c) => (
-              <CategoryBadge key={c} category={c} />
+            {pillars.map((p) => (
+              <PillarBadge key={p} pillar={p} />
             ))}
           </div>
         ) : (
@@ -122,8 +122,8 @@ export function SessionSummary({
         </Button>
       </div>
       <p className="mt-3 text-center text-xs text-ink-faint">
-        {categories
-          .map((c) => CATEGORIES[c].label)
+        {pillars
+          .map((p) => PILLARS[p].label)
           .slice(0, 3)
           .join(' · ') || 'Come back tomorrow to keep the streak alive'}
       </p>
