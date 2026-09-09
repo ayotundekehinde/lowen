@@ -4,6 +4,10 @@ import type { ChordProgression } from '@/lib/types';
  * A curated set of progressions at the heart of Nigerian gospel, Afro-gospel,
  * praise and worship. Stored in the number system (degrees, not notes) so they
  * can be rendered or transposed into any key — the way a gospel bassist thinks.
+ *
+ * Each chart carries the pillars it is especially useful for, so the Library
+ * can filter and the session generator can weight around the same IDs songs
+ * and loops share.
  */
 export const chordProgressions: ChordProgression[] = [
   {
@@ -16,6 +20,24 @@ export const chordProgressions: ChordProgression[] = [
     context: 'praise',
     feel: 'straight',
     tags: ['1-4-5', 'foundational', 'praise'],
+    pillars: ['number-system', 'chord-movement', 'groove-pocket'],
+  },
+  {
+    id: 'prog-1456',
+    name: '1 4 5 6',
+    kind: 'progression',
+    chords: [
+      { degree: 1 },
+      { degree: 4 },
+      { degree: 5 },
+      { degree: 6, quality: 'min' },
+    ],
+    timeSignature: '4/4',
+    suggestedKey: 'D Major',
+    context: 'nigerian-gospel',
+    feel: 'straight',
+    tags: ['1-4-5-6', 'praise', 'chorus'],
+    pillars: ['groove-pocket', 'number-system', 'chord-movement', 'passing-notes'],
   },
   {
     id: 'prog-1564',
@@ -27,6 +49,7 @@ export const chordProgressions: ChordProgression[] = [
     context: 'contemporary-gospel',
     feel: 'straight',
     tags: ['praise', 'anthemic', 'four-chord'],
+    pillars: ['number-system', 'chord-movement', 'playing-changes'],
   },
   {
     id: 'prog-6251',
@@ -43,6 +66,7 @@ export const chordProgressions: ChordProgression[] = [
     context: 'contemporary-gospel',
     feel: 'swing',
     tags: ['turnaround', 'ii-v', 'jazz-gospel'],
+    pillars: ['playing-changes', 'chord-movement', 'passing-notes'],
   },
   {
     id: 'prog-251',
@@ -58,6 +82,7 @@ export const chordProgressions: ChordProgression[] = [
     context: 'contemporary-gospel',
     feel: 'swing',
     tags: ['turnaround', 'ii-v-i'],
+    pillars: ['chord-movement', 'playing-changes', 'passing-notes'],
   },
   {
     id: 'prog-worship-1-4',
@@ -72,6 +97,7 @@ export const chordProgressions: ChordProgression[] = [
     context: 'worship',
     feel: '6/8',
     tags: ['vamp', 'meditative', 'spontaneous'],
+    pillars: ['vamps', 'groove-pocket', 'passing-notes', 'fills'],
   },
   {
     id: 'prog-praise-4-5-1',
@@ -88,6 +114,7 @@ export const chordProgressions: ChordProgression[] = [
     context: 'nigerian-gospel',
     feel: 'straight',
     tags: ['praise', 'cadence', 'inversions'],
+    pillars: ['transitions', 'passing-notes', 'fills'],
   },
   {
     id: 'prog-highlife-1-4-5',
@@ -99,6 +126,7 @@ export const chordProgressions: ChordProgression[] = [
     context: 'highlife',
     feel: 'syncopated',
     tags: ['highlife', 'afro', 'bounce'],
+    pillars: ['groove-pocket', 'playing-changes', 'passing-notes'],
   },
   {
     id: 'prog-turn-1-6-2-5',
@@ -115,17 +143,24 @@ export const chordProgressions: ChordProgression[] = [
     context: 'contemporary-gospel',
     feel: 'straight',
     tags: ['turnaround', 'back-to-the-top'],
+    pillars: ['chord-movement', 'transitions', 'playing-changes'],
   },
   {
     id: 'prog-6-8-1-5-6-4',
     name: '1 5 6 4 (6/8)',
     kind: 'progression',
-    chords: [{ degree: 1 }, { degree: 5 }, { degree: 6, quality: 'min' }, { degree: 4 }],
+    chords: [
+      { degree: 1 },
+      { degree: 5 },
+      { degree: 6, quality: 'min' },
+      { degree: 4 },
+    ],
     timeSignature: '6/8',
     suggestedKey: 'E Major',
     context: 'gospel-6-8',
     feel: '6/8',
     tags: ['6/8', 'worship', 'rolling'],
+    pillars: ['groove-pocket', 'playing-changes', 'ear-training', 'chord-movement'],
   },
   {
     id: 'prog-walkup-4-1',
@@ -141,6 +176,7 @@ export const chordProgressions: ChordProgression[] = [
     context: 'nigerian-gospel',
     feel: 'straight',
     tags: ['walk-up', 'passing tones', 'into the 1'],
+    pillars: ['passing-notes', 'transitions', 'fills'],
   },
 ];
 

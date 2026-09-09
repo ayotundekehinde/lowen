@@ -3,21 +3,35 @@ import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { SongCard } from '@/components/library/SongCard';
 import { LoopCard } from '@/components/loops/LoopCard';
+import { ProgressionLibraryCard } from '@/components/library/ProgressionLibraryCard';
 import { ChallengeOverlay } from '@/components/loops/ChallengeOverlay';
 import { cn } from '@/lib/cn';
-import { generateSession } from '@/lib/sessionGenerator';
-import { SESSION_PRESETS } from '@/lib/pillars';
-import { GOSPEL_STYLES } from '@/lib/styles';
-import type { Difficulty, Loop } from '@/lib/types';
+import {
+  generateProgressionSession,
+  generateSession,
+} from '@/lib/sessionGenerator';
+import { SESSION_PRESETS, PILLAR_LIST } from '@/lib/pillars';
+import { GOSPEL_STYLES, GOSPEL_STYLE_LIST } from '@/lib/styles';
+import { parseKey } from '@/lib/music';
+import { filterProgressions } from '@/lib/relations';
+import { buildSessionContext } from '@/lib/sessionContext';
+import type {
+  Difficulty,
+  GospelStyle,
+  Loop,
+  PillarId,
+  ProgressionKind,
+} from '@/lib/types';
 import { usePractice } from '@/store/practiceStore';
 import { Heart, Search, X } from 'lucide-react';
 
-type Tab = 'all' | 'songs' | 'loops';
+type Tab = 'all' | 'songs' | 'loops' | 'progressions';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'songs', label: 'Songs' },
   { id: 'loops', label: 'Loops' },
+  { id: 'progressions', label: 'Progressions' },
 ];
 
 const DIFFICULTIES: (Difficulty | 'all')[] = [
@@ -27,17 +41,29 @@ const DIFFICULTIES: (Difficulty | 'all')[] = [
   'advanced',
 ];
 
+const KINDS: (ProgressionKind | 'all')[] = [
+  'all',
+  'progression',
+  'vamp',
+  'turnaround',
+];
+
 export function Library() {
   const navigate = useNavigate();
-  const { songs, loops, exercises, setActivePlan } = usePractice();
+  const { songs, loops, progressions, exercises, setActivePlan, getProgressionById } =
+    usePractice();
 
   const [tab, setTab] = useState<Tab>('all');
   const [query, setQuery] = useState('');
   const [difficulty, setDifficulty] = useState<Difficulty | 'all'>('all');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [challengeLoop, setChallengeLoop] = useState<Loop | null>(null);
+  const [pillar, setPillar] = useState<PillarId | 'all'>('all');
+  const [style, setStyle] = useState<GospelStyle | 'all'>('all');
+  const [kind, setKind] = useState<ProgressionKind | 'all'>('all');
 
   const q = query.trim().toLowerCase();
+  const progressionTab = tab === 'progressions';
 
   const filteredSongs = useMemo(
     () =>
@@ -67,39 +93,66 @@ export function Library() {
     [loops, favoritesOnly, difficulty, q],
   );
 
-  const practiceLoop = (loop: Loop) => {
-    setActivePlan(
-      generateSession(exercises, {
-        totalMinutes: 30,
-        weights: SESSION_PRESETS.groove.weights,
-        preferContext: loop.context,
+  const filteredProgressions = useMemo(
+    () =>
+      filterProgressions(progressions, {
+        query: q,
+        pillar: progressionTab ? pillar : 'all',
+        context: progressionTab ? style : 'all',
+        kind: progressionTab ? kind : 'all',
       }),
-    );
+    [progressions, q, pillar, style, kind, progressionTab],
+  );
+
+  const practiceLoop = (loop: Loop) => {
+    const progression = loop.progressionId
+      ? getProgressionById(loop.progressionId)
+      : undefined;
+    const key = loop.keyRoot ?? parseKey(loop.key);
+    if (progression) {
+      setActivePlan(
+        generateProgressionSession(exercises, {
+          progression,
+          key,
+          loop,
+        }),
+      );
+    } else {
+      setActivePlan(
+        generateSession(exercises, {
+          totalMinutes: 30,
+          weights: SESSION_PRESETS.groove.weights,
+          preferContext: loop.context,
+          context: buildSessionContext({ loop, key }),
+        }),
+      );
+    }
     navigate('/practice');
   };
 
   const showSongs = tab === 'all' || tab === 'songs';
   const showLoops = tab === 'all' || tab === 'loops';
+  const showProgressions = tab === 'all' || tab === 'progressions';
   const totalResults =
     (showSongs ? filteredSongs.length : 0) +
-    (showLoops ? filteredLoops.length : 0);
+    (showLoops ? filteredLoops.length : 0) +
+    (showProgressions ? filteredProgressions.length : 0);
 
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Library"
-        title="Songs & Loops"
-        subtitle="Everything you're learning and grooving over, in one place."
+        title="Songs, Loops & Progressions"
+        subtitle="The material you rehearse for service — charts, grooves, and songs in one place."
       />
 
-      {/* Tabs */}
-      <div className="flex w-full max-w-sm gap-1 rounded-2xl border border-line bg-surface p-1.5">
+      <div className="flex w-full max-w-xl gap-1 rounded-2xl border border-line bg-surface p-1.5">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={cn(
-              'focus-ring flex-1 rounded-xl px-4 py-2 text-sm font-semibold uppercase tracking-wide transition-all',
+              'focus-ring flex-1 rounded-xl px-2 py-2 text-xs font-semibold uppercase tracking-wide transition-all sm:px-4 sm:text-sm',
               tab === t.id
                 ? 'bg-elevated text-ink'
                 : 'text-ink-muted hover:text-ink-soft',
@@ -110,7 +163,6 @@ export function Library() {
         ))}
       </div>
 
-      {/* Search + filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search
@@ -120,7 +172,7 @@ export function Library() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by title, artist, genre, tag…"
+            placeholder="Search by title, artist, style, numbers…"
             className="focus-ring h-11 w-full rounded-xl border border-line bg-surface pl-10 pr-9 text-sm text-ink placeholder:text-ink-faint"
           />
           {query && (
@@ -134,38 +186,82 @@ export function Library() {
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <select
-            value={difficulty}
-            onChange={(e) =>
-              setDifficulty(e.target.value as Difficulty | 'all')
-            }
-            className="focus-ring h-11 rounded-xl border border-line bg-surface px-3 text-sm capitalize text-ink-soft"
-          >
-            {DIFFICULTIES.map((d) => (
-              <option key={d} value={d}>
-                {d === 'all' ? 'All levels' : d}
-              </option>
-            ))}
-          </select>
+        {progressionTab ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={kind}
+              onChange={(e) =>
+                setKind(e.target.value as ProgressionKind | 'all')
+              }
+              className="focus-ring h-11 rounded-xl border border-line bg-surface px-3 text-sm capitalize text-ink-soft"
+            >
+              {KINDS.map((k) => (
+                <option key={k} value={k}>
+                  {k === 'all' ? 'All kinds' : k}
+                </option>
+              ))}
+            </select>
+            <select
+              value={style}
+              onChange={(e) =>
+                setStyle(e.target.value as GospelStyle | 'all')
+              }
+              className="focus-ring h-11 rounded-xl border border-line bg-surface px-3 text-sm text-ink-soft"
+            >
+              <option value="all">All styles</option>
+              {GOSPEL_STYLE_LIST.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={pillar}
+              onChange={(e) => setPillar(e.target.value as PillarId | 'all')}
+              className="focus-ring h-11 rounded-xl border border-line bg-surface px-3 text-sm text-ink-soft"
+            >
+              <option value="all">All pillars</option>
+              {PILLAR_LIST.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <select
+              value={difficulty}
+              onChange={(e) =>
+                setDifficulty(e.target.value as Difficulty | 'all')
+              }
+              className="focus-ring h-11 rounded-xl border border-line bg-surface px-3 text-sm capitalize text-ink-soft"
+            >
+              {DIFFICULTIES.map((d) => (
+                <option key={d} value={d}>
+                  {d === 'all' ? 'All levels' : d}
+                </option>
+              ))}
+            </select>
 
-          <button
-            onClick={() => setFavoritesOnly((v) => !v)}
-            className={cn(
-              'focus-ring flex h-11 items-center gap-2 rounded-xl border px-3.5 text-sm font-medium transition-colors',
-              favoritesOnly
-                ? 'border-transparent bg-accent/15 text-accent'
-                : 'border-line text-ink-muted hover:text-ink',
-            )}
-            aria-pressed={favoritesOnly}
-          >
-            <Heart
-              size={16}
-              fill={favoritesOnly ? 'var(--color-accent)' : 'none'}
-            />
-            <span className="hidden sm:inline">Favorites</span>
-          </button>
-        </div>
+            <button
+              onClick={() => setFavoritesOnly((v) => !v)}
+              className={cn(
+                'focus-ring flex h-11 items-center gap-2 rounded-xl border px-3.5 text-sm font-medium transition-colors',
+                favoritesOnly
+                  ? 'border-transparent bg-accent/15 text-accent'
+                  : 'border-line text-ink-muted hover:text-ink',
+              )}
+              aria-pressed={favoritesOnly}
+            >
+              <Heart
+                size={16}
+                fill={favoritesOnly ? 'var(--color-accent)' : 'none'}
+              />
+              <span className="hidden sm:inline">Favorites</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {totalResults === 0 && (
@@ -179,7 +275,6 @@ export function Library() {
         </div>
       )}
 
-      {/* Songs */}
       {showSongs && filteredSongs.length > 0 && (
         <section>
           {tab === 'all' && (
@@ -193,7 +288,6 @@ export function Library() {
         </section>
       )}
 
-      {/* Loops */}
       {showLoops && filteredLoops.length > 0 && (
         <section>
           {tab === 'all' && (
@@ -207,6 +301,22 @@ export function Library() {
                 onPractice={practiceLoop}
                 onChallenge={setChallengeLoop}
               />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {showProgressions && filteredProgressions.length > 0 && (
+        <section>
+          {tab === 'all' && (
+            <SectionHeading
+              title="Progressions"
+              count={filteredProgressions.length}
+            />
+          )}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredProgressions.map((p) => (
+              <ProgressionLibraryCard key={p.id} progression={p} />
             ))}
           </div>
         </section>
