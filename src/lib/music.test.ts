@@ -11,7 +11,10 @@ import {
   semitonesBetween,
   pitchClassIndex,
   spellPitch,
+  numbersLine,
+  progressionBarCount,
 } from './music';
+import { chordProgressions } from '@/data/progressions';
 
 const D_MAJOR: MusicalKey = { tonic: 'D', mode: 'major' };
 const BB_MAJOR: MusicalKey = { tonic: 'Bb', mode: 'major' };
@@ -162,5 +165,41 @@ describe('transposition', () => {
     );
     expect(inD.map((c) => c.symbol)).toEqual(['D', 'A', 'Bm', 'G']);
     expect(inBb.map((c) => c.symbol)).toEqual(['Bb', 'F', 'Gm', 'Eb']);
+  });
+});
+
+describe('numbersLine and bars', () => {
+  it('joins degrees with arrows', () => {
+    expect(numbersLine(ONE_FIVE_SIX_FOUR)).toBe('1 → 5 → 6 → 4');
+  });
+
+  it('counts bars, defaulting each chord to 1', () => {
+    expect(progressionBarCount(ONE_FIVE_SIX_FOUR)).toBe(4);
+    expect(
+      progressionBarCount([
+        { degree: 1, bars: 2 },
+        { degree: 4, bars: 2 },
+      ]),
+    ).toBe(4);
+  });
+});
+
+describe('canonical data is not mutated by preview/transposition', () => {
+  it('leaves stored progressions unchanged after rendering in another key', () => {
+    const snapshot = JSON.stringify(chordProgressions);
+    for (const p of chordProgressions) {
+      renderProgression(p, D_MAJOR);
+      renderProgression(p, BB_MAJOR);
+      transposeProgression(p, A_MINOR);
+    }
+    expect(JSON.stringify(chordProgressions)).toBe(snapshot);
+  });
+
+  it('does not mutate chord arrays when rendering', () => {
+    const chords = ONE_FIVE_SIX_FOUR.map((c) => ({ ...c }));
+    const before = JSON.stringify(chords);
+    renderProgression(chords, D_MAJOR);
+    renderProgression(chords, BB_MAJOR);
+    expect(JSON.stringify(chords)).toBe(before);
   });
 });

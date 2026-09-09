@@ -1,20 +1,25 @@
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
-import { ProgressBar, RadialProgress } from '@/components/ui/Progress';
+import { RadialProgress } from '@/components/ui/Progress';
 import { DifficultyBadge } from '@/components/ui/Badge';
 import { LoopCard } from '@/components/loops/LoopCard';
 import { ChallengeOverlay } from '@/components/loops/ChallengeOverlay';
 import { ProgressionCard } from '@/components/music/ProgressionView';
+import { SectionCard } from '@/components/library/SectionCard';
 import {
   generateSession,
   generateProgressionSession,
+  generateSectionSession,
 } from '@/lib/sessionGenerator';
 import { parseKey } from '@/lib/music';
 import { GOSPEL_STYLES } from '@/lib/styles';
 import { SESSION_PRESETS } from '@/lib/pillars';
+import { buildSessionContext } from '@/lib/sessionContext';
 import type { Loop, MusicalKey } from '@/lib/types';
+import type { ResolvedSection } from '@/lib/relations';
 import { usePractice } from '@/store/practiceStore';
 import {
   ArrowLeft,
@@ -33,6 +38,7 @@ export function SongDetail() {
     getSongById,
     getLoopById,
     getProgressionById,
+    resolveSongSection,
     exercises,
     setActivePlan,
     toggleSongFavorite,
@@ -63,29 +69,69 @@ export function SongDetail() {
     .map((id) => getProgressionById(id))
     .filter((p): p is NonNullable<typeof p> => Boolean(p));
 
-  const styleLabel = song ? GOSPEL_STYLES[song.context].label : undefined;
+  const resolvedSections = song.sections.map((section) =>
+    resolveSongSection(song, section),
+  );
+
+  const styleLabel = GOSPEL_STYLES[song.context].label;
+  const songKey = song.keyRoot ?? parseKey(song.key);
 
   const practiceSong = () => {
-    if (!song) return;
     setActivePlan(
       generateSession(exercises, {
         totalMinutes: 30,
         weights: SESSION_PRESETS.song.weights,
         preferContext: song.context,
-        context: { label: song.title, key: song.key, style: styleLabel },
+        context: buildSessionContext({
+          song,
+          key: songKey,
+          context: song.context,
+        }),
       }),
     );
     navigate('/practice');
   };
 
   const practiceWithLoop = () => {
-    if (!song) return;
+    const first = associatedLoops[0];
+    const progression = first?.progressionId
+      ? getProgressionById(first.progressionId)
+      : undefined;
+    if (first && progression) {
+      setActivePlan(
+        generateProgressionSession(exercises, {
+          progression,
+          key: first.keyRoot ?? parseKey(first.key),
+          song,
+          loop: first,
+        }),
+      );
+    } else {
+      setActivePlan(
+        generateSession(exercises, {
+          totalMinutes: 30,
+          weights: SESSION_PRESETS.groove.weights,
+          preferContext: song.context,
+          context: buildSessionContext({
+            song,
+            loop: first,
+            key: songKey,
+            context: song.context,
+          }),
+        }),
+      );
+    }
+    navigate('/practice');
+  };
+
+  const practiceSection = (resolved: ResolvedSection) => {
     setActivePlan(
-      generateSession(exercises, {
-        totalMinutes: 30,
-        weights: SESSION_PRESETS.groove.weights,
-        preferContext: song.context,
-        context: { label: song.title, key: song.key, style: styleLabel },
+      generateSectionSession(exercises, {
+        song: resolved.song,
+        section: resolved.section,
+        progression: resolved.progression,
+        loop: resolved.loop,
+        key: resolved.key,
       }),
     );
     navigate('/practice');
@@ -129,7 +175,6 @@ export function SongDetail() {
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Overall progress + meta */}
         <div className="panel flex flex-col items-center p-6 text-center">
           <RadialProgress value={song.progress} size={150}>
             <div>
@@ -145,40 +190,32 @@ export function SongDetail() {
             <Meta label="Key" value={song.key} />
             <Meta label="Tempo" value={`${song.bpm} BPM`} />
             <Meta label="Tuning" value={song.tuning} />
-            <Meta label="Level" value={<DifficultyBadge difficulty={song.difficulty} />} />
+            <Meta
+              label="Level"
+              value={<DifficultyBadge difficulty={song.difficulty} />}
+            />
           </div>
         </div>
 
-        {/* Sections */}
-        <div className="panel p-6 lg:col-span-2">
+        <div className="lg:col-span-2">
           <h2 className="font-display text-lg font-semibold text-ink">
             Sections
           </h2>
           <p className="mt-1 text-sm text-ink-muted">
-            Track your progress part by part.
+            Practice each part the way you'd rehearse it for service.
           </p>
-          <div className="mt-5 space-y-4">
-            {song.sections.map((section) => (
-              <div key={section.id}>
-                <div className="mb-1.5 flex items-center justify-between text-sm">
-                  <span className="font-medium text-ink">{section.name}</span>
-                  <span className="tnum text-ink-muted">{section.progress}%</span>
-                </div>
-                <ProgressBar
-                  value={section.progress}
-                  color={
-                    section.progress >= 85
-                      ? 'var(--color-good)'
-                      : 'var(--color-accent)'
-                  }
-                />
-              </div>
+          <div className="mt-5 grid gap-4">
+            {resolvedSections.map((resolved) => (
+              <SectionCard
+                key={resolved.section.id}
+                resolved={resolved}
+                onPractice={practiceSection}
+              />
             ))}
           </div>
         </div>
       </div>
 
-      {/* Action buttons */}
       <div className="flex flex-col gap-3 sm:flex-row">
         <Button
           variant="primary"
@@ -201,14 +238,18 @@ export function SongDetail() {
         </Button>
       </div>
 
-      {/* Notes */}
       <section className="panel p-6">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink">
             Practice notes
           </h2>
           {notesDirty && (
-            <Button variant="secondary" size="sm" onClick={saveNotes} icon={<Save size={14} />}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={saveNotes}
+              icon={<Save size={14} />}
+            >
               Save
             </Button>
           )}
@@ -225,7 +266,6 @@ export function SongDetail() {
         />
       </section>
 
-      {/* Associated chord progressions */}
       {associatedProgressions.length > 0 && (
         <section>
           <div className="mb-4 flex items-center gap-2">
@@ -239,14 +279,14 @@ export function SongDetail() {
               <ProgressionCard
                 key={prog.id}
                 progression={prog}
-                musicKey={song.keyRoot ?? parseKey(song.key)}
+                musicKey={songKey}
                 keySelector
                 onPractice={(key: MusicalKey) => {
                   setActivePlan(
                     generateProgressionSession(exercises, {
                       progression: prog,
                       key,
-                      styleLabel,
+                      song,
                     }),
                   );
                   navigate('/practice');
@@ -257,7 +297,6 @@ export function SongDetail() {
         </section>
       )}
 
-      {/* Associated loops */}
       <section>
         <div className="mb-4 flex items-center gap-2">
           <Dumbbell size={18} className="text-accent" />
@@ -271,7 +310,24 @@ export function SongDetail() {
               <LoopCard
                 key={loop.id}
                 loop={loop}
-                onPractice={practiceWithLoop}
+                onPractice={() => {
+                  const progression = loop.progressionId
+                    ? getProgressionById(loop.progressionId)
+                    : undefined;
+                  if (progression) {
+                    setActivePlan(
+                      generateProgressionSession(exercises, {
+                        progression,
+                        key: loop.keyRoot ?? parseKey(loop.key),
+                        song,
+                        loop,
+                      }),
+                    );
+                  } else {
+                    practiceWithLoop();
+                  }
+                  navigate('/practice');
+                }}
                 onChallenge={setChallengeLoop}
               />
             ))}
@@ -298,7 +354,7 @@ function Meta({
   value,
 }: {
   label: string;
-  value: React.ReactNode;
+  value: ReactNode;
 }) {
   return (
     <div>

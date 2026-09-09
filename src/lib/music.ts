@@ -216,6 +216,16 @@ export function numberLabel(chord: NumberChord): string {
   return `${chord.accidental ?? ''}${chord.degree}`;
 }
 
+/** A progression written as numbers, e.g. `1 → 5 → 6 → 4`. */
+export function numbersLine(chords: NumberChord[]): string {
+  return chords.map(numberLabel).join(' → ');
+}
+
+/** Total bars in a number-system chart (each chord defaults to 1 bar). */
+export function progressionBarCount(chords: NumberChord[]): number {
+  return chords.reduce((sum, c) => sum + (c.bars ?? 1), 0);
+}
+
 /** A concrete chord symbol for a NumberChord in a key, e.g. `Bm`, `A7`, `D/F#`. */
 export function degreeToChordSymbol(
   key: MusicalKey,

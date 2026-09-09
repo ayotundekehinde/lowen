@@ -13,8 +13,15 @@ import type {
   SessionPlan,
   Skill,
   Song,
+  SongSection,
   Stats,
 } from '@/lib/types';
+import {
+  getLoopsByProgressionId,
+  getSongsByProgressionId,
+  resolveSection,
+  type ResolvedSection,
+} from '@/lib/relations';
 import {
   averageSessionMinutes,
   computeStats,
@@ -61,6 +68,12 @@ interface PracticeStore {
   getSongById: (id: string) => Song | undefined;
   getLoopById: (id: string) => Loop | undefined;
   getProgressionById: (id: string) => ChordProgression | undefined;
+  resolveSongSection: (
+    song: Song,
+    section: SongSection,
+  ) => ResolvedSection;
+  loopsForProgression: (progressionId: string) => Loop[];
+  songsForProgression: (progressionId: string) => Song[];
 }
 
 const PracticeContext = createContext<PracticeStore | null>(null);
@@ -97,6 +110,12 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
       getSongById: (id) => songs.find((s) => s.id === id),
       getLoopById: (id) => loops.find((l) => l.id === id),
       getProgressionById: (id) => progressions.find((p) => p.id === id),
+      resolveSongSection: (song, section) =>
+        resolveSection(song, section, progressions, loops),
+      loopsForProgression: (progressionId) =>
+        getLoopsByProgressionId(loops, progressionId),
+      songsForProgression: (progressionId) =>
+        getSongsByProgressionId(songs, progressionId),
       recordSession: (session) =>
         setSessions((prev) => [session, ...prev]),
       toggleSongFavorite: (songId) =>

@@ -9,6 +9,7 @@ import { ChallengeOverlay } from '@/components/loops/ChallengeOverlay';
 import { parseKey, formatKey } from '@/lib/music';
 import { GOSPEL_STYLES } from '@/lib/styles';
 import { SESSION_PRESETS } from '@/lib/pillars';
+import { buildSessionContext } from '@/lib/sessionContext';
 import {
   generateProgressionSession,
   generateSession,
@@ -78,6 +79,7 @@ export function LoopDetail() {
         generateProgressionSession(exercises, {
           progression,
           key: previewKey,
+          loop,
           styleLabel,
         }),
       );
@@ -87,11 +89,11 @@ export function LoopDetail() {
           totalMinutes: 30,
           weights: SESSION_PRESETS.groove.weights,
           preferContext: loop.context,
-          context: {
-            label: `${loop.name} · ${formatKey(previewKey)}`,
-            key: formatKey(previewKey),
-            style: styleLabel,
-          },
+          context: buildSessionContext({
+            loop,
+            key: previewKey,
+            styleLabel,
+          }),
         }),
       );
     }
