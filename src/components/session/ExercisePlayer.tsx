@@ -1,8 +1,12 @@
+import { useEffect, useState } from 'react';
 import { useCountdown } from '@/hooks/useCountdown';
+import { useMetronome } from '@/hooks/useMetronome';
 import { TimerDial } from './TimerDial';
 import { Button } from '@/components/ui/Button';
 import { PillarBadge, DifficultyBadge } from '@/components/ui/Badge';
 import { pillarColor, PILLARS } from '@/lib/pillars';
+import { parseMeter } from '@/lib/metronome';
+import { unlockAudio } from '@/lib/audio';
 import type { SessionPlanItem } from '@/lib/types';
 import {
   Check,
@@ -11,6 +15,8 @@ import {
   Plus,
   SkipForward,
   Gauge,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 
 interface ExercisePlayerProps {
@@ -37,6 +43,25 @@ export function ExercisePlayer({
     seconds,
     onComplete,
   });
+
+  const [click, setClick] = useState(true);
+  const meter = parseMeter(undefined, exercise.feel);
+  const bpm = exercise.bpm ?? 90;
+  const { start: startClick, stop: stopClick } = useMetronome({
+    bpm,
+    meter,
+    click,
+  });
+
+  useEffect(() => {
+    if (timer.running && exercise.bpm != null) {
+      void unlockAudio().then(() => startClick());
+    } else {
+      stopClick();
+    }
+  }, [timer.running, exercise.bpm, startClick, stopClick]);
+
+  useEffect(() => () => stopClick(), [stopClick]);
 
   return (
     <div className="animate-[var(--animate-rise)]">
@@ -82,6 +107,14 @@ export function ExercisePlayer({
                     }}
                   />
                 )}
+                <button
+                  type="button"
+                  onClick={() => setClick((c) => !c)}
+                  className="focus-ring ml-1 rounded-md p-1 text-ink-muted hover:text-ink"
+                  aria-label={click ? 'Mute metronome' : 'Enable metronome'}
+                >
+                  {click ? <Volume2 size={14} /> : <VolumeX size={14} />}
+                </button>
               </div>
             )}
             <div className="rounded-xl border border-line bg-surface px-3 py-2 text-sm text-ink-soft">

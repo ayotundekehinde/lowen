@@ -1,76 +1,76 @@
 # Lowen
 
-A personal practice companion for bass players. Lowen helps you decide what to
-practice, runs structured practice sessions with a timer, organizes your songs
-and practice loops, and tracks your progress.
+A gospel bass practice studio for Nigerian and church bassists. Lowen is built
+around how this music is actually played: the number system, vamps, praise and
+worship contexts, and getting a song ready for Sunday.
 
-This is a **frontend-first prototype**. All data is local/mock — there is no
-authentication, backend, or database. The data layer is deliberately isolated so
-it can be swapped for a real API later without touching the UI.
+There is no account, no backend, and no AI. Your sessions, favorites, notes and
+ear-lab score live in this browser (`localStorage`). Reloading the page keeps
+the desk.
 
 ## Tech stack
 
 - **React 18** + **TypeScript**
 - **Vite 5**
-- **Tailwind CSS v4** (CSS-first design tokens via `@theme`)
-- `react-router-dom` for routing, `lucide-react` for icons
+- **Tailwind CSS v4**
+- `react-router-dom`, `lucide-react`
+- Web Audio metronome and bass tones (oscillators — no sample packs)
 
 ## Getting started
 
 ```bash
 npm install
-npm run dev      # start the dev server (http://localhost:5173)
+npm run dev      # http://localhost:5173
 npm run build    # type-check + production build
-npm run lint     # eslint
-npm run preview  # preview the production build
+npm run lint
+npm run test
+npm run preview
 ```
 
-## Features
+## What you can do
 
-- **Home** — a dashboard that answers "what should I practice today?": a
-  recommended session with a prominent `START SESSION`, weekly stats, a weekly
-  activity chart, and quick-start actions.
-- **Practice** — a session builder (duration / focus / intensity) that generates
-  a plan from the exercise library, then a live runner with a functional
-  countdown timer, per-exercise cards, and an end-of-session summary you can rate
-  and save.
-- **Library** — songs and loops with `All / Songs / Loops` tabs, search, and
-  difficulty/favorite filters. Song detail pages show overall and per-section
-  progress, editable notes, and associated loops. Loops include a mock transport
-  and generated creativity challenges.
-- **Progress** — practice statistics, per-category time distribution, a mock
-  skill overview, and recent sessions.
+- **Home** — “Ready for Sunday?” A daily session, your Sunday set (edit songs,
+  keys, and slots — it stays on this device), and a nudge toward the pillars
+  you’ve practiced least.
+- **This Sunday** (`/sunday`) — the set editor. Home and Bandstand follow it.
+- **Practice** — Build a session by length, pillar, and mode (warm up /
+  rehearse / prepare for service). The runner has a real countdown and a
+  metronome click on timed drills.
+- **Studio**
+  - **Vamp Lab** — ride a vamp with a walking line; MD half-step jumps
+  - **Number Lab** — hear 1–7 in any key
+  - **Ear Lab** — name the number (or the movement)
+  - **Bandstand** — walk *your* Sunday set; walking bass + key jumps
+  - **Metronome** — 4/4 and 6/8 (dotted-quarter pulse, accents on 1 and 4)
+- **Library** — songs, loops and number-system progressions. Play a loop and
+  you’ll hear the click and the roots, not a silent waveform. Challenges are
+  gospel-language prompts (vamps, walk-ups, pocket).
+- **Progress** — streak, minutes, and time by pillar. New sessions persist.
+
+The learning taxonomy is eleven **pillars** (groove, numbers, vamps, fills,
+transitions, …). Musical worlds are typed **gospel styles** (Nigerian Gospel,
+6/8 worship, highlife, …), not free-text tags.
 
 ## Project structure
 
 ```
 src/
-  lib/          Domain types, category/intensity config, formatting,
-                stats math, the session generator, and challenge generator.
-  data/          Mock songs, loops, exercises, sessions, and skills.
-                 This is the single swappable data layer.
-  store/         In-memory PracticeProvider context — the one place that
-                 holds mutable app state (swap this for a real client later).
-  hooks/         useCountdown — a timestamp-accurate countdown timer.
+  lib/          Types, pillars, styles, number-system math, session generator,
+                metronome math, Web Audio, local persistence, ear lab, recs.
+  data/         Seed songs, loops, progressions, exercises, Sunday sets.
+  store/        PracticeProvider — hydrates from seeds + localStorage.
+  hooks/        useCountdown, useMetronome.
   components/
-    ui/          Reusable primitives (Button, Progress, Badge, StatCard, …).
-    layout/      App shell, responsive sidebar / bottom nav, page header.
-    session/     Session runner, exercise player, timer dial, summary, preview.
-    library/     Song card.
-    loops/       Loop card, waveform placeholder, challenge overlay.
-  pages/         Home, Practice, Library, SongDetail, Progress, NotFound.
+    studio/     Vamp / Number / Ear / Bandstand / Metronome labs + transport.
+    session/    Runner, exercise player (with click), preview, summary.
+    music/      Progression view, key selector.
+    layout/     App shell, sidebar, mobile nav.
+  pages/        Home, Practice, Studio, Library, Progress, detail pages.
 ```
 
-## Notes & intentional limitations
+## Notes
 
-- **Audio is mocked.** Play buttons drive an animated waveform/equalizer
-  placeholder; no real audio files or processing are wired in yet.
-- **State is in-memory.** Completed sessions, favorites, and notes reset on
-  reload. Persistence and a backend are intentionally out of scope for this
-  first version.
-
-## Roadmap (deliberately not built yet)
-
-Authentication, payments, AI APIs, real audio processing, a cloud database, and
-social features are all future work. The structure above is designed to make
-adding them straightforward.
+- Audio is a click and bass-register oscillator tones, unlocked by a tap. There
+  are no full backing tracks.
+- Seed catalog data is versioned in git. Your history is local to the browser.
+- Auth, payments, cloud sync, and social features are out of scope.

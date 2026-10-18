@@ -1,12 +1,26 @@
 import type { Loop } from '@/lib/types';
 
 /**
- * Backing loops a Nigerian/Gospel bassist actually plays over — praise breaks,
- * worship vamps, highlife and Afro-gospel grooves. Every loop carries a typed
- * gospel context and links to a number-system progression so practice connects
- * straight to the changes.
+ * Backing loops a Nigerian/Gospel bassist actually plays over. Every loop
+ * shares a progressionId with the charts songs use, so a section, its loop and
+ * its practice session are the same musical material.
  */
 export const loops: Loop[] = [
+  {
+    id: 'loop-naija-chorus',
+    name: 'Nigerian Gospel Praise',
+    context: 'nigerian-gospel',
+    key: 'D Major',
+    keyRoot: { tonic: 'D', mode: 'major' },
+    bpm: 104,
+    timeSignature: '4/4',
+    lengthBars: 4,
+    difficulty: 'intermediate',
+    feel: 'straight',
+    progressionId: 'prog-1456',
+    tags: ['praise', 'chorus', 'pocket'],
+    favorite: true,
+  },
   {
     id: 'loop-naija-praise',
     name: 'Naija Praise Break',
@@ -35,6 +49,21 @@ export const loops: Loop[] = [
     feel: '6/8',
     progressionId: 'prog-worship-1-4',
     tags: ['vamp', 'spontaneous', 'dynamics'],
+    favorite: false,
+  },
+  {
+    id: 'loop-6-8-movement',
+    name: '6/8 Gospel Movement',
+    context: 'gospel-6-8',
+    key: 'Bb Major',
+    keyRoot: { tonic: 'Bb', mode: 'major' },
+    bpm: 66,
+    timeSignature: '6/8',
+    lengthBars: 4,
+    difficulty: 'intermediate',
+    feel: '6/8',
+    progressionId: 'prog-6-8-1-5-6-4',
+    tags: ['6/8', 'worship', 'rolling'],
     favorite: false,
   },
   {

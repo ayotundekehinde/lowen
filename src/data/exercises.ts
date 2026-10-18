@@ -23,6 +23,20 @@ export const exercises: Exercise[] = [
     tags: ['pocket', '6/8'],
   },
   {
+    id: 'ex-pocket-6-8-movement',
+    name: '6/8 movement on 1 5 6 4',
+    pillars: ['groove-pocket', 'playing-changes', 'ear-training'],
+    durationMin: 10,
+    instructions:
+      'Ride 1 → 5 → 6 → 4 in 6/8. Lock the rolling pulse, then outline each change so the movement is obvious without leaving the pocket.',
+    bpm: 66,
+    difficulty: 'intermediate',
+    context: 'gospel-6-8',
+    feel: '6/8',
+    progressionId: 'prog-6-8-1-5-6-4',
+    tags: ['6/8', 'worship', 'rolling'],
+  },
+  {
     id: 'ex-pocket-praise',
     name: 'Laid-back praise pocket',
     pillars: ['groove-pocket', 'playing-changes'],
@@ -86,6 +100,32 @@ export const exercises: Exercise[] = [
     difficulty: 'beginner',
     progressionId: 'prog-1451',
     tags: ['numbers', 'root-fifth'],
+  },
+  {
+    id: 'ex-num-1456-keys',
+    name: 'Roots of 1 4 5 6 in three keys',
+    pillars: ['number-system', 'chord-movement'],
+    durationMin: 10,
+    instructions:
+      'Play the roots of 1 → 4 → 5 → 6 in D, then G, then A — thinking in numbers, not note names. This is the Praise Medley chorus shape.',
+    difficulty: 'beginner',
+    context: 'nigerian-gospel',
+    progressionId: 'prog-1456',
+    tags: ['numbers', 'roots', 'transposition'],
+  },
+  {
+    id: 'ex-pocket-1456',
+    name: 'Praise chorus pocket (1 4 5 6)',
+    pillars: ['groove-pocket', 'passing-notes'],
+    durationMin: 10,
+    instructions:
+      'Lock roots on 1 → 4 → 5 → 6 at 104 BPM. Keep the pocket even, then add one passing tone into the 1 at the top of each cycle.',
+    bpm: 104,
+    difficulty: 'intermediate',
+    context: 'nigerian-gospel',
+    feel: 'straight',
+    progressionId: 'prog-1456',
+    tags: ['pocket', 'praise', 'chorus'],
   },
   {
     id: 'ex-num-6251-chart',

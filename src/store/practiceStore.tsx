@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -13,13 +14,35 @@ import type {
   SessionPlan,
   Skill,
   Song,
+  SongSection,
   Stats,
 } from '@/lib/types';
+import {
+  getLoopsByProgressionId,
+  getSongsByProgressionId,
+  resolveSection,
+  type ResolvedSection,
+} from '@/lib/relations';
 import {
   averageSessionMinutes,
   computeStats,
   weeklyMinutesTotal,
 } from '@/lib/stats';
+import {
+  applyLoopOverrides,
+  applySongOverrides,
+  EMPTY_EAR_LAB,
+  loadPersisted,
+  loopOverridesFrom,
+  mergeSessions,
+  savePersisted,
+  songOverridesFrom,
+  userSessionsOnly,
+  type EarLabStats,
+} from '@/lib/storage';
+import { applyEarResult } from '@/lib/earLab';
+import { cloneSundaySet, ensureItemIds } from '@/lib/setlist';
+import { sundaySetForDate, type SundaySet } from '@/data/setlists';
 import {
   chordProgressions as seedProgressions,
   exercises as seedExercises,
@@ -29,13 +52,11 @@ import {
   songs as seedSongs,
 } from '@/data';
 
+const SEED_SESSION_IDS = new Set(seedSessions.map((s) => s.id));
+
 /**
- * In-memory application store.
- *
- * This is intentionally a thin React context wrapping local state seeded from
- * the mock data layer. It is the single place that holds mutable app state, so
- * swapping it for a real client (React Query, a backend, etc.) later means
- * changing only this file — components consume the `usePractice` hook.
+ * Application store. Seed data hydrates from `src/data`; sessions, favorites,
+ * notes and ear-lab stats persist in localStorage so a reload keeps the desk.
  */
 interface PracticeStore {
   songs: Song[];
@@ -47,6 +68,9 @@ interface PracticeStore {
   stats: Stats;
   averageSessionMin: number;
   weekMinutes: number;
+  earLab: EarLabStats;
+  sundaySet: SundaySet;
+  sundaySetIsCustom: boolean;
 
   /** The session currently queued to be played, if any. */
   activePlan: SessionPlan | null;
@@ -56,23 +80,68 @@ interface PracticeStore {
   toggleSongFavorite: (songId: string) => void;
   toggleLoopFavorite: (loopId: string) => void;
   updateSongNotes: (songId: string, notes: string) => void;
+  recordEarGuess: (correct: boolean) => void;
+  saveSundaySet: (set: SundaySet) => void;
+  resetSundaySet: () => void;
 
   /** Selectors that read the store's *mutable* copies (single source of truth). */
   getSongById: (id: string) => Song | undefined;
   getLoopById: (id: string) => Loop | undefined;
   getProgressionById: (id: string) => ChordProgression | undefined;
+  resolveSongSection: (
+    song: Song,
+    section: SongSection,
+  ) => ResolvedSection;
+  loopsForProgression: (progressionId: string) => Loop[];
+  songsForProgression: (progressionId: string) => Song[];
 }
 
 const PracticeContext = createContext<PracticeStore | null>(null);
 
+function hydrate() {
+  const persisted = loadPersisted();
+  return {
+    songs: applySongOverrides(seedSongs, persisted.songOverrides),
+    loops: applyLoopOverrides(seedLoops, persisted.loopOverrides),
+    sessions: mergeSessions(seedSessions, persisted.sessions),
+    earLab: persisted.earLab,
+    sundaySet: persisted.sundaySet
+      ? ensureItemIds(persisted.sundaySet)
+      : null,
+  };
+}
+
 export function PracticeProvider({ children }: { children: ReactNode }) {
-  const [songs, setSongs] = useState<Song[]>(seedSongs);
-  const [loops, setLoops] = useState<Loop[]>(seedLoops);
+  const initial = useMemo(() => hydrate(), []);
+  const [songs, setSongs] = useState<Song[]>(initial.songs);
+  const [loops, setLoops] = useState<Loop[]>(initial.loops);
   const [exercises] = useState<Exercise[]>(seedExercises);
   const [progressions] = useState<ChordProgression[]>(seedProgressions);
   const [skills] = useState<Skill[]>(seedSkills);
-  const [sessions, setSessions] = useState<PracticeSession[]>(seedSessions);
+  const [sessions, setSessions] = useState<PracticeSession[]>(initial.sessions);
+  const [earLab, setEarLab] = useState<EarLabStats>(
+    initial.earLab ?? EMPTY_EAR_LAB,
+  );
+  const [customSundaySet, setCustomSundaySet] = useState<SundaySet | null>(
+    initial.sundaySet,
+  );
   const [activePlan, setActivePlan] = useState<SessionPlan | null>(null);
+
+  const sundaySet = useMemo(
+    () => customSundaySet ?? ensureItemIds(sundaySetForDate()),
+    [customSundaySet],
+  );
+
+  useEffect(() => {
+    savePersisted({
+      version: 1,
+      sessions: userSessionsOnly(sessions, SEED_SESSION_IDS),
+      songOverrides: songOverridesFrom(songs, seedSongs),
+      loopOverrides: loopOverridesFrom(loops, seedLoops),
+      earLab,
+      sundaySet: customSundaySet,
+    });
+  }, [sessions, songs, loops, earLab, customSundaySet]);
 
   const stats = useMemo(() => computeStats(sessions), [sessions]);
   const averageSessionMin = useMemo(
@@ -92,11 +161,20 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
       stats,
       averageSessionMin,
       weekMinutes,
+      earLab,
+      sundaySet,
+      sundaySetIsCustom: customSundaySet != null,
       activePlan,
       setActivePlan,
       getSongById: (id) => songs.find((s) => s.id === id),
       getLoopById: (id) => loops.find((l) => l.id === id),
       getProgressionById: (id) => progressions.find((p) => p.id === id),
+      resolveSongSection: (song, section) =>
+        resolveSection(song, section, progressions, loops),
+      loopsForProgression: (progressionId) =>
+        getLoopsByProgressionId(loops, progressionId),
+      songsForProgression: (progressionId) =>
+        getSongsByProgressionId(songs, progressionId),
       recordSession: (session) =>
         setSessions((prev) => [session, ...prev]),
       toggleSongFavorite: (songId) =>
@@ -115,6 +193,10 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
         setSongs((prev) =>
           prev.map((s) => (s.id === songId ? { ...s, notes } : s)),
         ),
+      recordEarGuess: (correct) =>
+        setEarLab((prev) => applyEarResult(prev, correct)),
+      saveSundaySet: (set) => setCustomSundaySet(cloneSundaySet(set)),
+      resetSundaySet: () => setCustomSundaySet(null),
     }),
     [
       songs,
@@ -126,6 +208,9 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
       stats,
       averageSessionMin,
       weekMinutes,
+      earLab,
+      sundaySet,
+      customSundaySet,
       activePlan,
     ],
   );

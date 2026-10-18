@@ -4,11 +4,15 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { DifficultyBadge, Tag } from '@/components/ui/Badge';
 import { ProgressionView } from '@/components/music/ProgressionView';
-import { WaveBars } from '@/components/loops/WaveBars';
+import { GrooveTransport } from '@/components/studio/GrooveTransport';
+import { WalkStyleControl } from '@/components/studio/WalkStyleControl';
 import { ChallengeOverlay } from '@/components/loops/ChallengeOverlay';
+import type { WalkStyle } from '@/lib/walk';
 import { parseKey, formatKey } from '@/lib/music';
+import { parseMeter } from '@/lib/metronome';
 import { GOSPEL_STYLES } from '@/lib/styles';
 import { SESSION_PRESETS } from '@/lib/pillars';
+import { buildSessionContext } from '@/lib/sessionContext';
 import {
   generateProgressionSession,
   generateSession,
@@ -19,8 +23,6 @@ import {
   ArrowLeft,
   Dumbbell,
   Heart,
-  Pause,
-  Play,
   Shuffle,
 } from 'lucide-react';
 
@@ -43,6 +45,12 @@ export function LoopDetail() {
   );
   const [previewKey, setPreviewKey] = useState<MusicalKey>(canonicalKey);
   const [playing, setPlaying] = useState(false);
+  const [click, setClick] = useState(true);
+  const [bass, setBass] = useState(true);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [walkStyle, setWalkStyle] = useState<WalkStyle>(
+    loop?.timeSignature === '6/8' || loop?.feel === '6/8' ? 'roll' : 'walk-up',
+  );
   const [showChallenge, setShowChallenge] = useState(false);
 
   if (!loop) {
@@ -78,6 +86,7 @@ export function LoopDetail() {
         generateProgressionSession(exercises, {
           progression,
           key: previewKey,
+          loop,
           styleLabel,
         }),
       );
@@ -87,11 +96,11 @@ export function LoopDetail() {
           totalMinutes: 30,
           weights: SESSION_PRESETS.groove.weights,
           preferContext: loop.context,
-          context: {
-            label: `${loop.name} · ${formatKey(previewKey)}`,
-            key: formatKey(previewKey),
-            style: styleLabel,
-          },
+          context: buildSessionContext({
+            loop,
+            key: previewKey,
+            styleLabel,
+          }),
         }),
       );
     }
@@ -130,23 +139,23 @@ export function LoopDetail() {
         }
       />
 
-      {/* Transport */}
-      <div className="panel flex items-center gap-4 p-5">
-        <button
-          onClick={() => setPlaying((p) => !p)}
-          className={
-            'grid h-12 w-12 shrink-0 place-items-center rounded-full transition-colors focus-ring ' +
-            (playing ? 'bg-accent text-black' : 'bg-elevated text-ink hover:bg-hover')
-          }
-          aria-label={playing ? 'Pause loop' : 'Play loop'}
-        >
-          {playing ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
-        </button>
-        <WaveBars playing={playing} bars={28} className="h-10 flex-1" />
-        <span className="tnum shrink-0 text-sm text-ink-muted">
-          {loop.lengthBars} bars
-        </span>
-      </div>
+      <WalkStyleControl value={walkStyle} onChange={setWalkStyle} />
+
+      <GrooveTransport
+        bpm={loop.bpm}
+        meter={parseMeter(loop.timeSignature, loop.feel)}
+        chords={progression?.chords}
+        musicKey={previewKey}
+        lengthBars={loop.lengthBars}
+        playing={playing}
+        onPlayingChange={setPlaying}
+        click={click}
+        onClickChange={setClick}
+        bass={bass}
+        onBassChange={setBass}
+        walkStyle={walkStyle}
+        onChordIndex={setActiveIndex}
+      />
 
       {/* Musical facts */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -179,6 +188,7 @@ export function LoopDetail() {
             musicKey={previewKey}
             keySelector
             onKeyChange={setPreviewKey}
+            activeIndex={playing ? activeIndex : undefined}
           />
           {isPreview && (
             <button

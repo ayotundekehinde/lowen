@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Lowen — a personal practice companion for bass players.",
+  "description": "Lowen — a gospel bass practice studio for Nigerian and church bassists.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

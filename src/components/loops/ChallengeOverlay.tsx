@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { WaveBars } from './WaveBars';
+import { GrooveTransport } from '@/components/studio/GrooveTransport';
 import { TimerDial } from '@/components/session/TimerDial';
 import { Button } from '@/components/ui/Button';
 import { Tag } from '@/components/ui/Badge';
 import { useCountdown } from '@/hooks/useCountdown';
 import { generateChallenge } from '@/lib/challenges';
+import { parseMeter } from '@/lib/metronome';
+import { parseKey } from '@/lib/music';
 import { GOSPEL_STYLES } from '@/lib/styles';
+import { usePractice } from '@/store/practiceStore';
 import type { Challenge, Loop } from '@/lib/types';
 import { Pause, Play, RefreshCw, Sparkles, X } from 'lucide-react';
 
@@ -18,11 +21,17 @@ interface ChallengeOverlayProps {
 const CHALLENGE_SECONDS = 5 * 60;
 
 export function ChallengeOverlay({ loop, onClose }: ChallengeOverlayProps) {
+  const { getProgressionById } = usePractice();
   const [challenge, setChallenge] = useState<Challenge>(() =>
     generateChallenge(loop),
   );
   const [playing, setPlaying] = useState(false);
   const timer = useCountdown({ seconds: CHALLENGE_SECONDS });
+  const chords =
+    (loop.progressionId
+      ? getProgressionById(loop.progressionId)?.chords
+      : loop.numberProgression) ?? [];
+  const musicKey = loop.keyRoot ?? parseKey(loop.key);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -48,7 +57,7 @@ export function ChallengeOverlay({ loop, onClose }: ChallengeOverlayProps) {
           <div className="flex items-center gap-2 text-accent">
             <Sparkles size={18} />
             <span className="font-display text-sm font-semibold uppercase tracking-wider">
-              Loop Challenge
+              Gospel challenge
             </span>
           </div>
           <button
@@ -62,22 +71,15 @@ export function ChallengeOverlay({ loop, onClose }: ChallengeOverlayProps) {
 
         <div className="px-5 py-6">
           {/* Loop context */}
-          <div className="flex items-center gap-3 rounded-xl border border-line bg-surface p-3">
-            <button
-              onClick={() => setPlaying((p) => !p)}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-elevated text-ink hover:bg-hover focus-ring"
-              aria-label={playing ? 'Pause' : 'Play'}
-            >
-              {playing ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
-            </button>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-ink">{loop.name}</p>
-              <p className="tnum text-xs text-ink-muted">
-                {loop.key} · {loop.bpm} BPM · {loop.timeSignature}
-              </p>
-            </div>
-            <WaveBars playing={playing} bars={12} className="h-7 w-20" />
-          </div>
+          <GrooveTransport
+            bpm={loop.bpm}
+            meter={parseMeter(loop.timeSignature, loop.feel)}
+            chords={chords}
+            musicKey={musicKey}
+            lengthBars={loop.lengthBars}
+            playing={playing}
+            onPlayingChange={setPlaying}
+          />
 
           {/* The challenge */}
           <div className="mt-6">

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ExercisePlayer } from './ExercisePlayer';
 import { SessionSummary } from './SessionSummary';
+import { SessionContextBanner } from './SessionContextBanner';
 import { Button } from '@/components/ui/Button';
 import { cn } from '@/lib/cn';
 import { pillarColor } from '@/lib/pillars';
@@ -93,10 +94,9 @@ export function SessionRunner({ plan, onExit }: SessionRunnerProps) {
             {formatMinutes(plan.totalMinutes)} · {plan.items.length} exercises
           </p>
           {plan.context && (
-            <p className="tnum mt-1 text-sm font-medium text-accent">
-              {plan.context.label}
-              {plan.context.style ? ` · ${plan.context.style}` : ''}
-            </p>
+            <div className="mt-1">
+              <SessionContextBanner context={plan.context} compact />
+            </div>
           )}
         </div>
         <Button variant="outline" size="sm" onClick={onExit} icon={<X size={15} />}>

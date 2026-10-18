@@ -7,7 +7,10 @@ import { Practice } from '@/pages/Practice';
 import { Library } from '@/pages/Library';
 import { SongDetail } from '@/pages/SongDetail';
 import { LoopDetail } from '@/pages/LoopDetail';
+import { ProgressionDetail } from '@/pages/ProgressionDetail';
 import { Progress } from '@/pages/Progress';
+import { Studio } from '@/pages/Studio';
+import { SundaySetPage } from '@/pages/SundaySet';
 import { NotFound } from '@/pages/NotFound';
 
 function ScrollToTop() {
@@ -29,6 +32,12 @@ export default function App() {
           <Route path="/library" element={<Library />} />
           <Route path="/library/song/:songId" element={<SongDetail />} />
           <Route path="/library/loop/:loopId" element={<LoopDetail />} />
+          <Route
+            path="/library/progression/:progressionId"
+            element={<ProgressionDetail />}
+          />
+          <Route path="/studio" element={<Studio />} />
+          <Route path="/sunday" element={<SundaySetPage />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -1,9 +1,10 @@
+import { SessionContextBanner } from './SessionContextBanner';
 import { Button } from '@/components/ui/Button';
 import { PillarBadge } from '@/components/ui/Badge';
 import { pillarColor, SESSION_MODES } from '@/lib/pillars';
 import { formatMinutes } from '@/lib/format';
 import type { SessionPlan } from '@/lib/types';
-import { Gauge, ListMusic, Play, RefreshCw } from 'lucide-react';
+import { Gauge, Play, RefreshCw } from 'lucide-react';
 
 interface PlanPreviewProps {
   plan: SessionPlan;
@@ -42,20 +43,7 @@ export function PlanPreview({ plan, onStart, onRegenerate }: PlanPreviewProps) {
         </div>
       </div>
 
-      {plan.context && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-accent/25 bg-accent/10 px-4 py-3">
-          <ListMusic size={18} className="shrink-0 text-accent" />
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-accent">
-              Working on
-            </p>
-            <p className="tnum truncate text-sm font-medium text-ink">
-              {plan.context.label}
-              {plan.context.style ? ` · ${plan.context.style}` : ''}
-            </p>
-          </div>
-        </div>
-      )}
+      {plan.context && <SessionContextBanner context={plan.context} />}
 
       <ol className="space-y-3">
         {plan.items.map((item, i) => {

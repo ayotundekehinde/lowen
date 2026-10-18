@@ -125,6 +125,8 @@ export interface ChordProgression {
   context?: GospelStyle;
   feel?: Feel;
   tags: string[];
+  /** Pillars this progression is especially useful for practicing. */
+  pillars?: PillarId[];
 }
 
 /** Normalized musical key used for transposition. */
@@ -181,8 +183,18 @@ export interface SongSection {
   name: string;
   /** 0–100 */
   progress: number;
-  /** Optional chart for this section (V1.5+ surfaces this in the UI). */
+  /** Shared chart for this section. */
   progressionId?: string;
+  /** Shared loop for grooving this section. */
+  loopId?: string;
+  /** Section-specific gospel context; falls back to the song. */
+  context?: GospelStyle;
+  /** Display key when this section is in a different key from the song. */
+  key?: string;
+  /** Structured key alongside the display string. */
+  keyRoot?: MusicalKey;
+  /** Pillars this section is especially useful for practicing. */
+  pillars?: PillarId[];
 }
 
 export interface Song {
@@ -296,13 +308,35 @@ export interface SessionPlanItem {
  * — it lets the preview and runner show what the session is built around.
  */
 export interface SessionContext {
-  /** e.g. "1 → 5 → 6 → 4 · D Major". */
+  /**
+   * Primary heading shown in the preview/runner.
+   * e.g. "Preparing: Chorus", "Vamp Practice", "Practicing: 6 → 2 → 5 → 1".
+   */
+  heading: string;
+  /** Number-system line, e.g. "1 → 4 → 5 → 6". */
+  numbers?: string;
+  /** Compact musical meta, e.g. "D Major · Nigerian Gospel · Praise". */
+  meta?: string;
+  /** Optional focus line, e.g. "Practice focus: Groove & Pocket". */
+  focusLabel?: string;
+  /**
+   * Fallback single-line label (heading + numbers + meta) for compact surfaces.
+   */
   label: string;
+  songId?: string;
+  songTitle?: string;
+  sectionId?: string;
+  sectionName?: string;
   progressionId?: string;
+  loopId?: string;
+  loopName?: string;
   /** Display key, e.g. "D Major". */
   key?: string;
   /** Human-readable style label, e.g. "Nigerian Gospel". */
   style?: string;
+  context?: GospelStyle;
+  kind?: ProgressionKind;
+  pillars?: PillarId[];
 }
 
 export interface SessionPlan {
