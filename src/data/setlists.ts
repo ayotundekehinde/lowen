@@ -1,4 +1,4 @@
-import type { GospelStyle } from '@/lib/types';
+import type { GospelStyle, MusicalKey } from '@/lib/types';
 
 /** A slot in a Sunday service set. */
 export type SetlistSlot =
@@ -9,9 +9,13 @@ export type SetlistSlot =
   | 'closing';
 
 export interface SetlistItem {
+  id: string;
   songId: string;
   slot: SetlistSlot;
   note?: string;
+  /** Service key for this slot; falls back to the song. */
+  key?: string;
+  keyRoot?: MusicalKey;
 }
 
 export interface SundaySet {
@@ -43,21 +47,25 @@ export const SUNDAY_SETS: SundaySet[] = [
     context: 'nigerian-gospel',
     items: [
       {
+        id: 'set-praise-igwe',
         songId: 'song-igwe',
         slot: 'opening-praise',
         note: 'Fast 1–4–5. Lock the pocket, survive the key jump.',
       },
       {
+        id: 'set-praise-medley',
         songId: 'song-praise-medley',
         slot: 'praise',
         note: 'Chorus lives on 1–4–5–6. Walk into the 1 on the turn.',
       },
       {
+        id: 'set-praise-way-maker',
         songId: 'song-way-maker',
         slot: 'worship',
         note: 'Think 1–5–6–4. Hold roots, then open the bridge.',
       },
       {
+        id: 'set-praise-ekwueme',
         songId: 'song-ekwueme',
         slot: 'altar',
         note: '6/8. Patient 1–4 vamp, fills only on the turns.',
@@ -71,21 +79,25 @@ export const SUNDAY_SETS: SundaySet[] = [
     context: 'worship',
     items: [
       {
+        id: 'set-thanks-imela',
         songId: 'song-imela',
         slot: 'opening-praise',
         note: 'Warm root-and-fifth pocket. Leave space for horns.',
       },
       {
+        id: 'set-thanks-way-maker',
         songId: 'song-way-maker',
         slot: 'worship',
         note: 'Follow the MD into spontaneous worship at the end.',
       },
       {
+        id: 'set-thanks-ekwueme',
         songId: 'song-ekwueme',
         slot: 'altar',
         note: 'Compound 6/8 — dotted quarter, not a 4/4 shuffle.',
       },
       {
+        id: 'set-thanks-medley',
         songId: 'song-praise-medley',
         slot: 'closing',
         note: 'Stamina. Stay in numbers when the key jumps.',

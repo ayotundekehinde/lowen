@@ -41,6 +41,8 @@ import {
   type EarLabStats,
 } from '@/lib/storage';
 import { applyEarResult } from '@/lib/earLab';
+import { cloneSundaySet, ensureItemIds } from '@/lib/setlist';
+import { sundaySetForDate, type SundaySet } from '@/data/setlists';
 import {
   chordProgressions as seedProgressions,
   exercises as seedExercises,
@@ -67,6 +69,8 @@ interface PracticeStore {
   averageSessionMin: number;
   weekMinutes: number;
   earLab: EarLabStats;
+  sundaySet: SundaySet;
+  sundaySetIsCustom: boolean;
 
   /** The session currently queued to be played, if any. */
   activePlan: SessionPlan | null;
@@ -77,6 +81,8 @@ interface PracticeStore {
   toggleLoopFavorite: (loopId: string) => void;
   updateSongNotes: (songId: string, notes: string) => void;
   recordEarGuess: (correct: boolean) => void;
+  saveSundaySet: (set: SundaySet) => void;
+  resetSundaySet: () => void;
 
   /** Selectors that read the store's *mutable* copies (single source of truth). */
   getSongById: (id: string) => Song | undefined;
@@ -99,6 +105,9 @@ function hydrate() {
     loops: applyLoopOverrides(seedLoops, persisted.loopOverrides),
     sessions: mergeSessions(seedSessions, persisted.sessions),
     earLab: persisted.earLab,
+    sundaySet: persisted.sundaySet
+      ? ensureItemIds(persisted.sundaySet)
+      : null,
   };
 }
 
@@ -113,7 +122,15 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
   const [earLab, setEarLab] = useState<EarLabStats>(
     initial.earLab ?? EMPTY_EAR_LAB,
   );
+  const [customSundaySet, setCustomSundaySet] = useState<SundaySet | null>(
+    initial.sundaySet,
+  );
   const [activePlan, setActivePlan] = useState<SessionPlan | null>(null);
+
+  const sundaySet = useMemo(
+    () => customSundaySet ?? ensureItemIds(sundaySetForDate()),
+    [customSundaySet],
+  );
 
   useEffect(() => {
     savePersisted({
@@ -122,8 +139,9 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
       songOverrides: songOverridesFrom(songs, seedSongs),
       loopOverrides: loopOverridesFrom(loops, seedLoops),
       earLab,
+      sundaySet: customSundaySet,
     });
-  }, [sessions, songs, loops, earLab]);
+  }, [sessions, songs, loops, earLab, customSundaySet]);
 
   const stats = useMemo(() => computeStats(sessions), [sessions]);
   const averageSessionMin = useMemo(
@@ -144,6 +162,8 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
       averageSessionMin,
       weekMinutes,
       earLab,
+      sundaySet,
+      sundaySetIsCustom: customSundaySet != null,
       activePlan,
       setActivePlan,
       getSongById: (id) => songs.find((s) => s.id === id),
@@ -175,6 +195,8 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
         ),
       recordEarGuess: (correct) =>
         setEarLab((prev) => applyEarResult(prev, correct)),
+      saveSundaySet: (set) => setCustomSundaySet(cloneSundaySet(set)),
+      resetSundaySet: () => setCustomSundaySet(null),
     }),
     [
       songs,
@@ -187,6 +209,8 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
       averageSessionMin,
       weekMinutes,
       earLab,
+      sundaySet,
+      customSundaySet,
       activePlan,
     ],
   );

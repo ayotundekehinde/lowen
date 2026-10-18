@@ -7,8 +7,12 @@ describe('sunday sets', () => {
     const ids = new Set(songs.map((s) => s.id));
     for (const set of SUNDAY_SETS) {
       expect(set.items.length).toBeGreaterThan(0);
+      const itemIds = new Set<string>();
       for (const item of set.items) {
         expect(ids.has(item.songId)).toBe(true);
+        expect(item.id).toBeTruthy();
+        expect(itemIds.has(item.id)).toBe(false);
+        itemIds.add(item.id);
       }
     }
   });

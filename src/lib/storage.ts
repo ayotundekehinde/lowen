@@ -1,4 +1,6 @@
 import type { Loop, PracticeSession, Song } from './types';
+import type { SundaySet } from '@/data/setlists';
+import { isSundaySet } from './setlist';
 
 export const STORAGE_KEY = 'lowen:v1';
 
@@ -24,6 +26,8 @@ export interface PersistedState {
   songOverrides: Record<string, SongOverride>;
   loopOverrides: Record<string, LoopOverride>;
   earLab: EarLabStats;
+  /** Null means “use this week’s rotating board”. */
+  sundaySet: SundaySet | null;
 }
 
 export const EMPTY_EAR_LAB: EarLabStats = {
@@ -40,6 +44,7 @@ export function emptyPersisted(): PersistedState {
     songOverrides: {},
     loopOverrides: {},
     earLab: { ...EMPTY_EAR_LAB },
+    sundaySet: null,
   };
 }
 
@@ -75,6 +80,7 @@ export function loadPersisted(
         ...EMPTY_EAR_LAB,
         ...(parsed.earLab ?? {}),
       },
+      sundaySet: isSundaySet(parsed.sundaySet) ? parsed.sundaySet : null,
     };
   } catch {
     return emptyPersisted();

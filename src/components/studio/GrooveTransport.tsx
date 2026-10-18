@@ -1,10 +1,11 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { WaveBars } from '@/components/loops/WaveBars';
 import { Button } from '@/components/ui/Button';
 import { useMetronome } from '@/hooks/useMetronome';
 import { playBassTone, unlockAudio } from '@/lib/audio';
-import { chordIndexAtBar, type Meter } from '@/lib/metronome';
-import { chordRootHz } from '@/lib/music';
+import { chordIndexAtBar, clickIntervalSec, type Meter } from '@/lib/metronome';
+import { pitchToHz } from '@/lib/music';
+import { midiOf, walkNoteForBeat, type WalkStyle } from '@/lib/walk';
 import type { MusicalKey, NumberChord } from '@/lib/types';
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react';
 
@@ -20,13 +21,16 @@ interface GrooveTransportProps {
   onClickChange?: (click: boolean) => void;
   bass?: boolean;
   onBassChange?: (bass: boolean) => void;
+  walkStyle?: WalkStyle;
   onChordIndex?: (index: number) => void;
+  /** Fired on every downbeat with the bar index (0-based). */
+  onBar?: (bar: number) => void;
   extra?: React.ReactNode;
 }
 
 /**
- * Shared play/pause transport: metronome click, optional bass roots on chord
- * changes, waveform, and beat lamps.
+ * Shared play/pause transport: metronome click, walking bass, waveform,
+ * and beat lamps.
  */
 export function GrooveTransport({
   bpm,
@@ -40,21 +44,65 @@ export function GrooveTransport({
   onClickChange,
   bass = true,
   onBassChange,
+  walkStyle = 'roots',
   onChordIndex,
+  onBar,
   extra,
 }: GrooveTransportProps) {
   const cycle = lengthBars ?? 4;
+  const chordsRef = useRef(chords);
+  const keyRef = useRef(musicKey);
+  const bassRef = useRef(bass);
+  const walkRef = useRef(walkStyle);
+  const bpmRef = useRef(bpm);
+  const meterRef = useRef(meter);
+  const cycleRef = useRef(cycle);
+  const prevMidiRef = useRef<number | null>(null);
+  const onChordRef = useRef(onChordIndex);
+  const onBarRef = useRef(onBar);
+
+  chordsRef.current = chords;
+  keyRef.current = musicKey;
+  bassRef.current = bass;
+  walkRef.current = walkStyle;
+  bpmRef.current = bpm;
+  meterRef.current = meter;
+  cycleRef.current = cycle;
+  onChordRef.current = onChordIndex;
+  onBarRef.current = onBar;
+
   const { beat, start, stop } = useMetronome({
     bpm,
     meter,
     click,
-    onBeat: ({ bar, isDownbeat, accent }) => {
-      if (chords.length === 0 || !musicKey) return;
-      const idx = chordIndexAtBar(chords, bar % cycle);
-      onChordIndex?.(idx);
-      if (bass && (isDownbeat || (meter === '6/8' && accent))) {
-        playBassTone(chordRootHz(musicKey, chords[idx]));
+    onBeat: ({ bar, beat: beatNow, isDownbeat, time }) => {
+      const currentChords = chordsRef.current;
+      const currentKey = keyRef.current;
+      const meterNow = meterRef.current;
+      if (currentChords.length && currentKey) {
+        const idx = chordIndexAtBar(
+          currentChords,
+          bar % cycleRef.current,
+        );
+        onChordRef.current?.(idx);
+        if (bassRef.current) {
+          const step = walkNoteForBeat(
+            currentChords,
+            currentKey,
+            bar,
+            beatNow,
+            meterNow,
+            walkRef.current,
+            prevMidiRef.current,
+          );
+          if (step) {
+            const dur = clickIntervalSec(bpmRef.current, meterNow) * 0.82;
+            playBassTone(pitchToHz(step.pitchIndex, step.octave), dur, time);
+            prevMidiRef.current = midiOf(step.pitchIndex, step.octave);
+          }
+        }
       }
+      if (isDownbeat) onBarRef.current?.(bar);
     },
   });
 
@@ -62,8 +110,10 @@ export function GrooveTransport({
     if (!playing) {
       stop();
       onChordIndex?.(0);
+      prevMidiRef.current = null;
       return;
     }
+    prevMidiRef.current = null;
     start();
     return () => stop();
   }, [playing, start, stop, onChordIndex]);

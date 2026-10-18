@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/Button';
 import { DifficultyBadge, Tag } from '@/components/ui/Badge';
 import { ProgressionView } from '@/components/music/ProgressionView';
 import { GrooveTransport } from '@/components/studio/GrooveTransport';
+import { WalkStyleControl } from '@/components/studio/WalkStyleControl';
 import { ChallengeOverlay } from '@/components/loops/ChallengeOverlay';
+import type { WalkStyle } from '@/lib/walk';
 import { parseKey, formatKey } from '@/lib/music';
 import { parseMeter } from '@/lib/metronome';
 import { GOSPEL_STYLES } from '@/lib/styles';
@@ -46,6 +48,9 @@ export function LoopDetail() {
   const [click, setClick] = useState(true);
   const [bass, setBass] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [walkStyle, setWalkStyle] = useState<WalkStyle>(
+    loop?.timeSignature === '6/8' || loop?.feel === '6/8' ? 'roll' : 'walk-up',
+  );
   const [showChallenge, setShowChallenge] = useState(false);
 
   if (!loop) {
@@ -134,6 +139,8 @@ export function LoopDetail() {
         }
       />
 
+      <WalkStyleControl value={walkStyle} onChange={setWalkStyle} />
+
       <GrooveTransport
         bpm={loop.bpm}
         meter={parseMeter(loop.timeSignature, loop.feel)}
@@ -146,6 +153,7 @@ export function LoopDetail() {
         onClickChange={setClick}
         bass={bass}
         onBassChange={setBass}
+        walkStyle={walkStyle}
         onChordIndex={setActiveIndex}
       />
 

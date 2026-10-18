@@ -1,15 +1,21 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProgressionView } from '@/components/music/ProgressionView';
 import { GrooveTransport } from './GrooveTransport';
+import { WalkStyleControl } from './WalkStyleControl';
+import { MdCueBar } from './MdCueBar';
 import { Button } from '@/components/ui/Button';
-import { sundaySetForDate, SETLIST_SLOT_LABEL } from '@/data/setlists';
+import { SETLIST_SLOT_LABEL } from '@/data/setlists';
 import { parseMeter } from '@/lib/metronome';
 import { formatKey } from '@/lib/music';
+import { applyKeyJump, jumpCueLabel, shouldJumpOnBar } from '@/lib/keyJump';
+import { resolveSetItemKey } from '@/lib/setlist';
 import { generateSectionSession } from '@/lib/sessionGenerator';
 import { GOSPEL_STYLES } from '@/lib/styles';
+import type { WalkStyle } from '@/lib/walk';
+import type { MusicalKey } from '@/lib/types';
 import { usePractice } from '@/store/practiceStore';
-import { ChevronLeft, ChevronRight, Dumbbell } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Dumbbell, ListMusic } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 export function Bandstand() {
@@ -20,9 +26,10 @@ export function Bandstand() {
     resolveSongSection,
     exercises,
     setActivePlan,
+    sundaySet,
   } = usePractice();
-  const set = useMemo(() => sundaySetForDate(), []);
-  const setSongs = set.items
+
+  const setSongs = sundaySet.items
     .map((item) => ({ item, song: getSongById(item.songId) }))
     .filter((x): x is typeof x & { song: NonNullable<typeof x.song> } =>
       Boolean(x.song),
@@ -38,11 +45,27 @@ export function Bandstand() {
   const [click, setClick] = useState(true);
   const [bass, setBass] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [walkStyle, setWalkStyle] = useState<WalkStyle>('walk-up');
+  const [everyBars, setEveryBars] = useState(0);
+  const [cue, setCue] = useState<string | null>(null);
 
   const song = catalog[songIndex] ?? catalog[0];
   const section = song?.sections[sectionIndex] ?? song?.sections[0];
   const resolved = song && section ? resolveSongSection(song, section) : null;
-  const key = resolved?.key ?? { tonic: 'C' as const, mode: 'major' as const };
+  const setItem = setSongs[songIndex]?.item;
+  const writtenKey: MusicalKey =
+    setItem && song
+      ? resolveSetItemKey(setItem, song)
+      : (resolved?.key ?? { tonic: 'C', mode: 'major' });
+
+  const writtenTonic = writtenKey.tonic;
+  const writtenMode = writtenKey.mode;
+  const [liveKey, setLiveKey] = useState<MusicalKey>(writtenKey);
+  useEffect(() => {
+    setLiveKey({ tonic: writtenTonic, mode: writtenMode });
+    setCue(null);
+  }, [writtenTonic, writtenMode, songIndex, sectionIndex]);
+
   const chords = resolved?.progression?.chords ?? [];
   const meter = parseMeter(
     resolved?.loop?.timeSignature ?? resolved?.progression?.timeSignature,
@@ -50,11 +73,23 @@ export function Bandstand() {
   );
   const bpm = resolved?.loop?.bpm ?? song?.bpm ?? 90;
 
+  useEffect(() => {
+    setWalkStyle(meter === '6/8' ? 'roll' : 'walk-up');
+  }, [meter, songIndex, sectionIndex]);
+
   if (!song || !section) {
     return <p className="text-ink-muted">No songs on the stand tonight.</p>;
   }
 
-  const slot = setSongs[songIndex]?.item.slot;
+  const slot = setItem?.slot;
+  const jump = (semitones: number) => {
+    setLiveKey((k) => {
+      const next = applyKeyJump(k, semitones);
+      setCue(jumpCueLabel(semitones, next));
+      return next;
+    });
+  };
+
   const stepSong = (dir: number) => {
     setPlaying(false);
     setSongIndex((i) => (i + dir + catalog.length) % catalog.length);
@@ -75,7 +110,7 @@ export function Bandstand() {
         section,
         progression: resolved?.progression,
         loop: resolved?.loop,
-        key,
+        key: liveKey,
         totalMinutes: 20,
         mode: 'service',
       }),
@@ -85,15 +120,25 @@ export function Bandstand() {
 
   return (
     <div className="space-y-6">
-      <p className="max-w-prose text-sm text-ink-muted">
-        Walk the Sunday set section by section — click, roots, numbers — the
-        way you would on the bandstand.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <p className="max-w-prose text-sm text-ink-muted">
+          Walk this Sunday’s set section by section. Click, walking bass,
+          numbers — and survive the key jump.
+        </p>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => navigate('/sunday')}
+          icon={<ListMusic size={14} />}
+        >
+          Edit set
+        </Button>
+      </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
         {catalog.map((s, i) => (
           <button
-            key={s.id}
+            key={setSongs[i]?.item.id ?? s.id}
             onClick={() => {
               setPlaying(false);
               setSongIndex(i);
@@ -121,7 +166,7 @@ export function Bandstand() {
               {song.title}
             </h3>
             <p className="text-sm text-ink-muted">
-              {song.artist} · {formatKey(key)} · {bpm} BPM
+              {song.artist} · {formatKey(liveKey)} · {bpm} BPM
             </p>
           </div>
           <div className="flex gap-1">
@@ -166,24 +211,43 @@ export function Bandstand() {
           <ProgressionView
             className="mt-5"
             chords={chords}
-            musicKey={key}
+            musicKey={liveKey}
             activeIndex={playing ? activeIndex : undefined}
           />
         )}
       </div>
 
+      <MdCueBar
+        liveKey={liveKey}
+        writtenKey={writtenKey}
+        onJump={jump}
+        onReset={() => {
+          setLiveKey(writtenKey);
+          setCue(null);
+        }}
+        everyBars={everyBars}
+        onEveryBars={setEveryBars}
+        cue={cue}
+      />
+
+      <WalkStyleControl value={walkStyle} onChange={setWalkStyle} />
+
       <GrooveTransport
         bpm={bpm}
         meter={meter}
         chords={chords}
-        musicKey={key}
+        musicKey={liveKey}
         playing={playing}
         onPlayingChange={setPlaying}
         click={click}
         onClickChange={setClick}
         bass={bass}
         onBassChange={setBass}
+        walkStyle={walkStyle}
         onChordIndex={setActiveIndex}
+        onBar={(bar) => {
+          if (shouldJumpOnBar(bar, everyBars)) jump(1);
+        }}
         extra={
           <div className="flex gap-1">
             <Button variant="ghost" size="sm" onClick={() => stepSection(-1)}>

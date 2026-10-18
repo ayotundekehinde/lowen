@@ -77,6 +77,7 @@ describe('storage', () => {
     const loaded = loadPersisted(store);
     expect(loaded.sessions).toHaveLength(1);
     expect(loaded.songOverrides['song-a']?.favorite).toBe(true);
+    expect(loaded.sundaySet).toBeNull();
   });
 
   it('survives corrupt JSON', () => {

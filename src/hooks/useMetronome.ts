@@ -83,18 +83,19 @@ export function useMetronome({
       const barNow = barRef.current;
       const accent = isAccentBeat(beatNow, meterNow);
       if (clickRef.current) playClick(accent, t);
+      onBeatRef.current?.({
+        beat: beatNow,
+        bar: barNow,
+        accent,
+        isDownbeat: beatNow === 0,
+        time: t,
+      });
 
       const delay = Math.max(0, (t - now) * 1000);
       const handle = setTimeout(() => {
         if (!runningRef.current) return;
         setBeat(beatNow);
         setBar(barNow);
-        onBeatRef.current?.({
-          beat: beatNow,
-          bar: barNow,
-          accent,
-          isDownbeat: beatNow === 0,
-        });
       }, delay);
       uiTimers.current.push(handle);
 

@@ -29,16 +29,18 @@ npm run preview
 
 ## What you can do
 
-- **Home** — “Ready for Sunday?” A daily session, this week’s rotating Sunday
-  set, and a nudge toward the pillars you’ve practiced least.
+- **Home** — “Ready for Sunday?” A daily session, your Sunday set (edit songs,
+  keys, and slots — it stays on this device), and a nudge toward the pillars
+  you’ve practiced least.
+- **This Sunday** (`/sunday`) — the set editor. Home and Bandstand follow it.
 - **Practice** — Build a session by length, pillar, and mode (warm up /
   rehearse / prepare for service). The runner has a real countdown and a
   metronome click on timed drills.
 - **Studio**
-  - **Vamp Lab** — ride a worship/praise vamp with click + bass roots
+  - **Vamp Lab** — ride a vamp with a walking line; MD half-step jumps
   - **Number Lab** — hear 1–7 in any key
   - **Ear Lab** — name the number (or the movement)
-  - **Bandstand** — walk the Sunday set section by section
+  - **Bandstand** — walk *your* Sunday set; walking bass + key jumps
   - **Metronome** — 4/4 and 6/8 (dotted-quarter pulse, accents on 1 and 4)
 - **Library** — songs, loops and number-system progressions. Play a loop and
   you’ll hear the click and the roots, not a silent waveform. Challenges are

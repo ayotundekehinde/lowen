@@ -10,6 +10,7 @@ import { LoopDetail } from '@/pages/LoopDetail';
 import { ProgressionDetail } from '@/pages/ProgressionDetail';
 import { Progress } from '@/pages/Progress';
 import { Studio } from '@/pages/Studio';
+import { SundaySetPage } from '@/pages/SundaySet';
 import { NotFound } from '@/pages/NotFound';
 
 function ScrollToTop() {
@@ -36,6 +37,7 @@ export default function App() {
             element={<ProgressionDetail />}
           />
           <Route path="/studio" element={<Studio />} />
+          <Route path="/sunday" element={<SundaySetPage />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

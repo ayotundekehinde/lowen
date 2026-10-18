@@ -11,6 +11,8 @@ export interface BeatInfo {
   bar: number;
   accent: boolean;
   isDownbeat: boolean;
+  /** AudioContext time this beat is scheduled for. */
+  time: number;
 }
 
 export function parseMeter(

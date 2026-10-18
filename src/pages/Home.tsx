@@ -8,8 +8,10 @@ import { PILLARS, pillarColor, SESSION_PRESETS } from '@/lib/pillars';
 import type { SessionPresetId } from '@/lib/pillars';
 import { generateSession, recommendedSession } from '@/lib/sessionGenerator';
 import { formatMinutes } from '@/lib/format';
-import { sundaySetForDate, SETLIST_SLOT_LABEL } from '@/data/setlists';
+import { SETLIST_SLOT_LABEL } from '@/data/setlists';
 import { sessionForWeakest, weakestPillars } from '@/lib/recommend';
+import { resolveSetItemKey } from '@/lib/setlist';
+import { formatKey } from '@/lib/music';
 import { GOSPEL_STYLES } from '@/lib/styles';
 import { usePractice } from '@/store/practiceStore';
 import {
@@ -38,6 +40,8 @@ export function Home() {
     exercises,
     setActivePlan,
     getSongById,
+    sundaySet: sunday,
+    sundaySetIsCustom,
   } = usePractice();
 
   const recommended = useMemo(
@@ -45,7 +49,6 @@ export function Home() {
     [exercises],
   );
 
-  const sunday = useMemo(() => sundaySetForDate(), []);
   const sundaySongs = sunday.items
     .map((item) => ({ item, song: getSongById(item.songId) }))
     .filter((row) => row.song);
@@ -154,17 +157,29 @@ export function Home() {
                   {sunday.title}
                 </h2>
                 <p className="text-sm text-ink-muted">
-                  {sunday.occasion} · {GOSPEL_STYLES[sunday.context].label}
+                  {sundaySetIsCustom
+                    ? 'Your set'
+                    : `${sunday.occasion} · ${GOSPEL_STYLES[sunday.context].label}`}
                 </p>
               </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate('/studio?lab=bandstand')}
-                icon={<AudioLines size={14} />}
-              >
-                Bandstand
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/sunday')}
+                  icon={<ListMusic size={14} />}
+                >
+                  Edit set
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate('/studio?lab=bandstand')}
+                  icon={<AudioLines size={14} />}
+                >
+                  Bandstand
+                </Button>
+              </div>
             </div>
             <ol className="divide-y divide-line rounded-xl border border-line">
               {sundaySongs.map(({ item, song }, i) => (
@@ -186,7 +201,7 @@ export function Home() {
                       </p>
                     </div>
                     <span className="tnum shrink-0 text-xs text-ink-faint">
-                      {song!.key} · {song!.bpm}
+                      {formatKey(resolveSetItemKey(item, song!))} · {song!.bpm}
                     </span>
                   </button>
                 </li>
