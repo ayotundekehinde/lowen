@@ -18,6 +18,8 @@ interface ProgressionViewProps {
    * `keySelector` is on, the component manages its own key state internally.
    */
   onKeyChange?: (key: MusicalKey) => void;
+  /** Highlight the live chord while a transport is running. */
+  activeIndex?: number;
 }
 
 /**
@@ -32,6 +34,7 @@ export function ProgressionView({
   className,
   keySelector = false,
   onKeyChange,
+  activeIndex,
 }: ProgressionViewProps) {
   const [internalKey, setInternalKey] = useState(musicKey);
   const controlled = onKeyChange != null;
@@ -68,7 +71,12 @@ export function ProgressionView({
         {rendered.map((c, i) => (
           <div
             key={i}
-            className="flex min-w-14 flex-col items-center rounded-lg border border-line bg-surface px-3 py-2"
+            className={
+              'flex min-w-14 flex-col items-center rounded-lg border px-3 py-2 ' +
+              (activeIndex === i
+                ? 'border-accent bg-accent/10'
+                : 'border-line bg-surface')
+            }
           >
             <span className="tnum font-display text-lg font-semibold leading-none text-accent">
               {c.numberLabel}

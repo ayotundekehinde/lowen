@@ -13,6 +13,9 @@ import {
   spellPitch,
   numbersLine,
   progressionBarCount,
+  chordRootIndex,
+  pitchToHz,
+  chordRootHz,
 } from './music';
 import { chordProgressions } from '@/data/progressions';
 
@@ -181,6 +184,17 @@ describe('numbersLine and bars', () => {
         { degree: 4, bars: 2 },
       ]),
     ).toBe(4);
+  });
+});
+
+describe('bass frequencies', () => {
+  it('maps C2 to ~65.4 Hz and the 1 of D major to D', () => {
+    expect(pitchToHz(0, 2)).toBeCloseTo(65.406, 2);
+    expect(chordRootIndex(D_MAJOR, { degree: 1 })).toBe(pitchClassIndex('D'));
+    expect(chordRootHz(D_MAJOR, { degree: 1 }, 2)).toBeCloseTo(
+      pitchToHz(pitchClassIndex('D'), 2),
+      4,
+    );
   });
 });
 

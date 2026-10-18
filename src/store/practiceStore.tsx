@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -28,6 +29,19 @@ import {
   weeklyMinutesTotal,
 } from '@/lib/stats';
 import {
+  applyLoopOverrides,
+  applySongOverrides,
+  EMPTY_EAR_LAB,
+  loadPersisted,
+  loopOverridesFrom,
+  mergeSessions,
+  savePersisted,
+  songOverridesFrom,
+  userSessionsOnly,
+  type EarLabStats,
+} from '@/lib/storage';
+import { applyEarResult } from '@/lib/earLab';
+import {
   chordProgressions as seedProgressions,
   exercises as seedExercises,
   loops as seedLoops,
@@ -36,13 +50,11 @@ import {
   songs as seedSongs,
 } from '@/data';
 
+const SEED_SESSION_IDS = new Set(seedSessions.map((s) => s.id));
+
 /**
- * In-memory application store.
- *
- * This is intentionally a thin React context wrapping local state seeded from
- * the mock data layer. It is the single place that holds mutable app state, so
- * swapping it for a real client (React Query, a backend, etc.) later means
- * changing only this file — components consume the `usePractice` hook.
+ * Application store. Seed data hydrates from `src/data`; sessions, favorites,
+ * notes and ear-lab stats persist in localStorage so a reload keeps the desk.
  */
 interface PracticeStore {
   songs: Song[];
@@ -54,6 +66,7 @@ interface PracticeStore {
   stats: Stats;
   averageSessionMin: number;
   weekMinutes: number;
+  earLab: EarLabStats;
 
   /** The session currently queued to be played, if any. */
   activePlan: SessionPlan | null;
@@ -63,6 +76,7 @@ interface PracticeStore {
   toggleSongFavorite: (songId: string) => void;
   toggleLoopFavorite: (loopId: string) => void;
   updateSongNotes: (songId: string, notes: string) => void;
+  recordEarGuess: (correct: boolean) => void;
 
   /** Selectors that read the store's *mutable* copies (single source of truth). */
   getSongById: (id: string) => Song | undefined;
@@ -78,14 +92,38 @@ interface PracticeStore {
 
 const PracticeContext = createContext<PracticeStore | null>(null);
 
+function hydrate() {
+  const persisted = loadPersisted();
+  return {
+    songs: applySongOverrides(seedSongs, persisted.songOverrides),
+    loops: applyLoopOverrides(seedLoops, persisted.loopOverrides),
+    sessions: mergeSessions(seedSessions, persisted.sessions),
+    earLab: persisted.earLab,
+  };
+}
+
 export function PracticeProvider({ children }: { children: ReactNode }) {
-  const [songs, setSongs] = useState<Song[]>(seedSongs);
-  const [loops, setLoops] = useState<Loop[]>(seedLoops);
+  const initial = useMemo(() => hydrate(), []);
+  const [songs, setSongs] = useState<Song[]>(initial.songs);
+  const [loops, setLoops] = useState<Loop[]>(initial.loops);
   const [exercises] = useState<Exercise[]>(seedExercises);
   const [progressions] = useState<ChordProgression[]>(seedProgressions);
   const [skills] = useState<Skill[]>(seedSkills);
-  const [sessions, setSessions] = useState<PracticeSession[]>(seedSessions);
+  const [sessions, setSessions] = useState<PracticeSession[]>(initial.sessions);
+  const [earLab, setEarLab] = useState<EarLabStats>(
+    initial.earLab ?? EMPTY_EAR_LAB,
+  );
   const [activePlan, setActivePlan] = useState<SessionPlan | null>(null);
+
+  useEffect(() => {
+    savePersisted({
+      version: 1,
+      sessions: userSessionsOnly(sessions, SEED_SESSION_IDS),
+      songOverrides: songOverridesFrom(songs, seedSongs),
+      loopOverrides: loopOverridesFrom(loops, seedLoops),
+      earLab,
+    });
+  }, [sessions, songs, loops, earLab]);
 
   const stats = useMemo(() => computeStats(sessions), [sessions]);
   const averageSessionMin = useMemo(
@@ -105,6 +143,7 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
       stats,
       averageSessionMin,
       weekMinutes,
+      earLab,
       activePlan,
       setActivePlan,
       getSongById: (id) => songs.find((s) => s.id === id),
@@ -134,6 +173,8 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
         setSongs((prev) =>
           prev.map((s) => (s.id === songId ? { ...s, notes } : s)),
         ),
+      recordEarGuess: (correct) =>
+        setEarLab((prev) => applyEarResult(prev, correct)),
     }),
     [
       songs,
@@ -145,6 +186,7 @@ export function PracticeProvider({ children }: { children: ReactNode }) {
       stats,
       averageSessionMin,
       weekMinutes,
+      earLab,
       activePlan,
     ],
   );

@@ -87,7 +87,7 @@ export function Practice() {
       <PageHeader
         eyebrow="Practice"
         title="Design your session"
-        subtitle="Pick a length, choose the pillars to work on, and set how you're playing it. We'll assemble a focused session from your drill library."
+        subtitle="Pick a length, the pillars to work, and how you're playing it — warm up, rehearse, or prepare for service."
       />
 
       {/* Duration */}

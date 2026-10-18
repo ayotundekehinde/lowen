@@ -8,6 +8,9 @@ import { PILLARS, pillarColor, SESSION_PRESETS } from '@/lib/pillars';
 import type { SessionPresetId } from '@/lib/pillars';
 import { generateSession, recommendedSession } from '@/lib/sessionGenerator';
 import { formatMinutes } from '@/lib/format';
+import { sundaySetForDate, SETLIST_SLOT_LABEL } from '@/data/setlists';
+import { sessionForWeakest, weakestPillars } from '@/lib/recommend';
+import { GOSPEL_STYLES } from '@/lib/styles';
 import { usePractice } from '@/store/practiceStore';
 import {
   Play,
@@ -22,20 +25,43 @@ import {
   Activity,
   Sparkles,
   ArrowRight,
+  AudioLines,
+  Ear,
 } from 'lucide-react';
 
 export function Home() {
   const navigate = useNavigate();
-  const { stats, sessions, averageSessionMin, exercises, setActivePlan } =
-    usePractice();
+  const {
+    stats,
+    sessions,
+    averageSessionMin,
+    exercises,
+    setActivePlan,
+    getSongById,
+  } = usePractice();
 
   const recommended = useMemo(
     () => recommendedSession(exercises),
     [exercises],
   );
 
+  const sunday = useMemo(() => sundaySetForDate(), []);
+  const sundaySongs = sunday.items
+    .map((item) => ({ item, song: getSongById(item.songId) }))
+    .filter((row) => row.song);
+
+  const weak = useMemo(
+    () => weakestPillars(stats.minutesByPillar, 3),
+    [stats],
+  );
+
   const startRecommended = () => {
     setActivePlan(recommended);
+    navigate('/practice');
+  };
+
+  const startWeakest = () => {
+    setActivePlan(sessionForWeakest(exercises, stats));
     navigate('/practice');
   };
 
@@ -55,13 +81,12 @@ export function Home() {
     <div className="space-y-8">
       <PageHeader
         eyebrow={greeting}
-        title="What should you practice today?"
-        subtitle="Your session is ready. Jump straight in, or pick a quick start below."
+        title="Ready for Sunday?"
+        subtitle="A set, a click, and the numbers. Practice what you’ll actually play."
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Recommended session */}
-        <section className="lg:col-span-2">
+        <section className="lg:col-span-2 space-y-6">
           <div className="panel relative overflow-hidden p-6 sm:p-8">
             <div
               className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-[0.07] blur-2xl"
@@ -70,7 +95,7 @@ export function Home() {
             <div className="flex items-center gap-2 text-accent">
               <Sparkles size={16} />
               <span className="text-xs font-semibold uppercase tracking-[0.18em]">
-                Recommended session
+                Today’s session
               </span>
             </div>
 
@@ -81,7 +106,7 @@ export function Home() {
                 </h2>
                 <p className="mt-1 text-ink-muted">
                   {formatMinutes(recommended.totalMinutes)} ·{' '}
-                  {recommended.items.length} exercises · balanced focus
+                  {recommended.items.length} exercises · balanced for service
                 </p>
               </div>
             </div>
@@ -118,9 +143,58 @@ export function Home() {
               START SESSION
             </Button>
           </div>
+
+          <section className="panel p-6">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                  This Sunday
+                </p>
+                <h2 className="mt-1 font-display text-xl font-semibold text-ink">
+                  {sunday.title}
+                </h2>
+                <p className="text-sm text-ink-muted">
+                  {sunday.occasion} · {GOSPEL_STYLES[sunday.context].label}
+                </p>
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate('/studio?lab=bandstand')}
+                icon={<AudioLines size={14} />}
+              >
+                Bandstand
+              </Button>
+            </div>
+            <ol className="divide-y divide-line rounded-xl border border-line">
+              {sundaySongs.map(({ item, song }, i) => (
+                <li key={item.songId}>
+                  <button
+                    onClick={() => navigate(`/library/song/${song!.id}`)}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-elevated/60"
+                  >
+                    <span className="tnum w-5 text-xs text-ink-faint">
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-ink">
+                        {song!.title}
+                      </p>
+                      <p className="truncate text-xs text-ink-muted">
+                        {SETLIST_SLOT_LABEL[item.slot]}
+                        {item.note ? ` · ${item.note}` : ''}
+                      </p>
+                    </div>
+                    <span className="tnum shrink-0 text-xs text-ink-faint">
+                      {song!.key} · {song!.bpm}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </section>
         </section>
 
-        {/* Weekly stats */}
         <section className="space-y-4">
           <h2 className="font-display text-lg font-semibold text-ink">
             This week
@@ -159,15 +233,40 @@ export function Home() {
             />
           </div>
           <WeekBars />
+
+          <div className="panel p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+              Needs attention
+            </p>
+            <p className="mt-1 text-sm text-ink-soft">
+              Least time this stretch — lean here before service.
+            </p>
+            <ul className="mt-3 space-y-2">
+              {weak.map((id) => (
+                <li key={id} className="flex items-center gap-2 text-sm">
+                  <PillarDot pillar={id} />
+                  <span className="text-ink">{PILLARS[id].label}</span>
+                </li>
+              ))}
+            </ul>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="mt-4"
+              onClick={startWeakest}
+              icon={<Play size={14} />}
+            >
+              Practice the weak spots
+            </Button>
+          </div>
         </section>
       </div>
 
-      {/* Quick start */}
       <section>
         <h2 className="mb-4 font-display text-lg font-semibold text-ink">
           Quick start
         </h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <QuickStartButton
             icon={<Repeat size={20} />}
             label="Practice a Vamp"
@@ -198,10 +297,15 @@ export function Home() {
             color={pillarColor('groove-pocket')}
             onClick={() => quickStart('groove', 30)}
           />
+          <QuickStartButton
+            icon={<Ear size={20} />}
+            label="Ear Lab"
+            color={pillarColor('ear-training')}
+            onClick={() => navigate('/studio?lab=ear')}
+          />
         </div>
       </section>
 
-      {/* Recent activity teaser */}
       {sessions.length > 0 && (
         <section>
           <div className="mb-3 flex items-center justify-between">
@@ -272,7 +376,6 @@ function QuickStartButton({
   );
 }
 
-/** Small weekly practice bar chart for the sidebar column. */
 function WeekBars() {
   const { stats } = usePractice();
   const max = Math.max(60, ...stats.weeklyMinutes);

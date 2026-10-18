@@ -32,8 +32,8 @@ export function Progress() {
     <div className="space-y-8">
       <PageHeader
         eyebrow="Progress"
-        title="Your practice, measured"
-        subtitle="Trends, distribution and skill growth from your recent sessions."
+        title="How the week is sitting"
+        subtitle="Minutes, pillars and streaks from sessions that stay on this device."
       />
 
       {/* Statistics */}

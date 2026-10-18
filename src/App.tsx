@@ -9,6 +9,7 @@ import { SongDetail } from '@/pages/SongDetail';
 import { LoopDetail } from '@/pages/LoopDetail';
 import { ProgressionDetail } from '@/pages/ProgressionDetail';
 import { Progress } from '@/pages/Progress';
+import { Studio } from '@/pages/Studio';
 import { NotFound } from '@/pages/NotFound';
 
 function ScrollToTop() {
@@ -34,6 +35,7 @@ export default function App() {
             path="/library/progression/:progressionId"
             element={<ProgressionDetail />}
           />
+          <Route path="/studio" element={<Studio />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -203,7 +203,7 @@ export function diatonicQuality(
 }
 
 /** Chromatic index of a NumberChord's root within a key. */
-function chordRootIndex(key: MusicalKey, chord: NumberChord): number {
+export function chordRootIndex(key: MusicalKey, chord: NumberChord): number {
   const steps = key.mode === 'minor' ? NATURAL_MINOR_STEPS : MAJOR_STEPS;
   let semis = steps[chord.degree - 1];
   if (chord.accidental === 'b') semis -= 1;
@@ -272,6 +272,24 @@ export function renderProgression(
     symbol: degreeToChordSymbol(key, chord),
     bars: chord.bars ?? 1,
   }));
+}
+
+/**
+ * Frequency of a pitch-class index in a given octave (C4 = octave 4).
+ * Default octave 2 sits in the bass register (C2 ≈ 65 Hz).
+ */
+export function pitchToHz(index: number, octave = 2): number {
+  const midi = (octave + 1) * 12 + mod12(index);
+  return 440 * 2 ** ((midi - 69) / 12);
+}
+
+/** Bass-register frequency of a NumberChord's root in a key. */
+export function chordRootHz(
+  key: MusicalKey,
+  chord: NumberChord,
+  octave = 2,
+): number {
+  return pitchToHz(chordRootIndex(key, chord), octave);
 }
 
 /** Transpose a key by a number of semitones (positive = up). */
