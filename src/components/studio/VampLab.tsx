@@ -15,7 +15,11 @@ import { Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 function isVampChart(p: ChordProgression): boolean {
-  return p.kind === 'vamp' || p.tags.includes('vamp') || p.chords.length <= 3;
+  return (
+    p.kind === 'vamp' ||
+    p.tags.includes('vamp') ||
+    Boolean(p.pillars?.includes('vamps'))
+  );
 }
 
 export function VampLab() {
